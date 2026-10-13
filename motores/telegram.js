@@ -60,11 +60,11 @@ export function criarTelegram({ dadosDir, nomeDe = (id) => id, equipe = () => []
 
   function ajuda() {
     const ids = equipe();
-    const exemplo = ['backend', 'frontend', 'programador'].find((x) => ids.includes(x)) || ids[0] || 'agente';
+    const exemplo = ['performance', 'backend', 'programador'].find((x) => ids.includes(x)) || ids[0] || 'agente';
     return [
       'Como mandar ordens:',
-      `• Só escreva o pedido: ${cranioAtivo() ? 'o 🔮 Crânio escolhe quem faz' : ids.includes('orquestrador') ? 'vai para o Orquestrador, que distribui' : 'vai para toda a equipe'}.`,
-      `• Para alguém específico: /${exemplo} crie a API de cadastro de clientes do CRM`,
+      `• Só escreva o pedido: ${cranioAtivo() ? 'o 🔮 Crânio escolhe quem faz' : ids.includes('orquestrador') ? 'vai para o Braço Direito, que distribui' : 'vai para toda a equipe'}.`,
+      `• Para alguém específico: /${exemplo} liste as contas com CPL acima da meta nesta semana`,
       '• Para todos: /todos reunião às 15h',
       '• Para um cliente: comece com #cliente (ex.: #padaria-do-ze /frontend site institucional)',
       '• Para ajustar uma entrega: responda à mensagem dela dizendo o que mudar',

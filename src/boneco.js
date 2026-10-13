@@ -131,7 +131,16 @@ export class Boneco {
       corpo.scale.set(0.9, 1, 0.72);
     }
 
-    if (agente.chefe) {
+    if (agente.chefe && agente.feminina) {
+      // colar dourado com pingente vermelho
+      const colar = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.008, 6, 24, Math.PI), mat('#d4a94a', { metalness: 0.8, roughness: 0.25 }));
+      colar.position.set(0, 0.5, 0.12);
+      colar.rotation.set(-0.35, 0, Math.PI);
+      this.tronco.add(colar);
+      const pingente = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), mat('#e30613', { roughness: 0.3 }));
+      pingente.position.set(0, 0.405, 0.15);
+      this.tronco.add(pingente);
+    } else if (agente.chefe) {
       // gravata
       const gravata = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.3, 4), mat('#c8102e'));
       gravata.position.set(0, 0.36, 0.14);
@@ -223,12 +232,12 @@ export class Boneco {
     this.pescoco.add(bigode);
   }
 
-  // Acessórios por função: fone no Designer, óculos no QA e no Analista de requisitos,
-  // gorro no Back-end, boné no Front-end, capacete no DevOps, crachá no Tech Lead,
-  // lápis na orelha do Documentador.
+  // Acessórios por função: headset no Customer Success, óculos na Qualidade, no Financeiro
+  // e no Planejamento, gorro no Performance, boné nas Pessoas & Squads, crachá no Braço
+  // Direito, lápis na orelha de Processos (os ids dos times antigos continuam valendo).
   criarAcessorios(id) {
     const preto = mat('#18181b', { roughness: 0.4 });
-    if (id === 'designer') {
+    if (['cs', 'designer'].includes(id)) {
       const arco = new THREE.Mesh(new THREE.TorusGeometry(0.185, 0.018, 8, 24, Math.PI), preto);
       arco.position.set(0, 0.17, 0);
       this.pescoco.add(arco);
@@ -239,8 +248,8 @@ export class Boneco {
         this.pescoco.add(concha);
       }
     }
-    if (['qa', 'revisor', 'requisitos', 'pesquisador'].includes(id)) {
-      const armacao = ['qa', 'revisor'].includes(id) ? preto : mat('#c9a14a', { metalness: 0.7, roughness: 0.3 });
+    if (['qa', 'revisor', 'financeiro', 'planejamento', 'requisitos', 'pesquisador'].includes(id)) {
+      const armacao = ['qa', 'revisor', 'financeiro'].includes(id) ? preto : mat('#c9a14a', { metalness: 0.7, roughness: 0.3 });
       for (const lado of [-1, 1]) {
         const lente = new THREE.Mesh(new THREE.TorusGeometry(0.038, 0.007, 6, 16), armacao);
         lente.position.set(lado * 0.06, 0.18, 0.165);
@@ -250,7 +259,7 @@ export class Boneco {
       ponte.position.set(0, 0.185, 0.168);
       this.pescoco.add(ponte);
     }
-    if (['backend', 'programador'].includes(id)) {
+    if (['performance', 'backend', 'programador'].includes(id)) {
       const gorro = new THREE.Mesh(new THREE.SphereGeometry(0.185, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), mat('#27272a', { roughness: 1 }));
       gorro.position.set(0, 0.2, -0.01);
       gorro.rotation.x = -0.25;
@@ -268,12 +277,12 @@ export class Boneco {
       faixa.position.set(0.07, 0.42, 0.147);
       this.tronco.add(faixa);
     }
-    if (id === 'frontend') {
+    if (['squads', 'frontend'].includes(id)) {
       // boné virado para trás
       const bone = new THREE.Mesh(new THREE.SphereGeometry(0.182, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.42), mat('#0f172a', { roughness: 0.9 }));
       bone.position.set(0, 0.2, 0);
       this.pescoco.add(bone);
-      const aba = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.015, 0.12), mat('#2ec4d6', { roughness: 0.9 }));
+      const aba = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.015, 0.12), mat(id === 'squads' ? '#e30613' : '#2ec4d6', { roughness: 0.9 }));
       aba.position.set(0, 0.25, -0.2);
       aba.rotation.x = -0.25;
       this.pescoco.add(aba);

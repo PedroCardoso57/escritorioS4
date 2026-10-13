@@ -15,7 +15,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { writeFile, rename, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PROVEDORES, chamarIA, NOMES, listarModelos } from './provedores.js';
-import { migrarConfiguracao, IDS_ANTIGOS } from './time-dev.js';
+import { migrarConfiguracao, IDS_ANTIGOS } from './time-v4.js';
 
 const VOLTAR_AO_OCIOSO = 8000;
 
@@ -230,7 +230,7 @@ export function criarMotores({ raiz, dadosDir, ordens, registrarStatus, marcarEn
   }
 
   // Descarta as mudanças feitas pela tela e volta a usar o motores.json do servidor.
-  // Uma vez só: converte a equipe antiga (agência de marketing) para o time de desenvolvimento,
+  // Uma vez só: converte uma equipe anterior (software house ou agência) para o time V4,
   // mantendo a IA escolhida para cada papel. Devolve o mapa de ids trocados (ou null).
   async function migrarTimeDev() {
     const novo = migrarConfiguracao(lerBruto());
@@ -238,7 +238,7 @@ export function criarMotores({ raiz, dadosDir, ordens, registrarStatus, marcarEn
     await mkdir(dadosDir, { recursive: true });
     await writeFile(`${arquivoEditado}.tmp`, JSON.stringify(novo, null, 2));
     await rename(`${arquivoEditado}.tmp`, arquivoEditado);
-    console.log(`Equipe convertida para o time de desenvolvimento: ${Object.keys(novo).filter((k) => !k.startsWith('_')).join(', ')}`);
+    console.log(`Equipe convertida para o time V4: ${Object.keys(novo).filter((k) => !k.startsWith('_')).join(', ')}`);
     return IDS_ANTIGOS;
   }
 

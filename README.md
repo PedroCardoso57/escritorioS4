@@ -21,20 +21,30 @@ Tudo usa a cor da marca (`MARCA_COR`, padrão `#e30613`) e o nome (`MARCA_NOME`,
 
 ## O time
 
-Uma software house de agentes, focada em **sistemas sob medida (ERP, CRM, painéis, integrações) e sites**:
+Os agentes apoiam a **Head de Operações de Marketing** da unidade V4, que é sócia: ela dá as ordens (o bonequinho "Você", na mesa da frente) e o time cuida do resultado das contas, da carteira, das pessoas, da margem e dos processos.
 
 | Agente | id | O que faz |
 |---|---|---|
-| Tech Lead | `orquestrador` | Entende o pedido, define a arquitetura e distribui as tarefas (delega e acompanha até a entrega final) |
-| Requisitos | `requisitos` | Regras de negócio, histórias de usuário, critérios de aceite, entidades do banco |
-| Designer UI/UX | `designer` | Telas, fluxos, design system e protótipos em HTML/CSS |
-| Front-end | `frontend` | Sites, landing pages e telas de sistema (HTML, CSS, React) |
-| Back-end | `backend` | APIs, banco de dados, autenticação e integrações (Pix, nota fiscal, WhatsApp…) |
-| QA | `qa` | Code review, testes e segurança; revisa as entregas dos agentes marcados com "revisão" |
-| DevOps | `devops` | Docker, deploy na VPS, HTTPS, CI/CD, monitoramento e backups |
-| Documentador | `documentador` | README, documentação da API, manuais do usuário e a documentação viva do projeto |
+| Braço Direito | `orquestrador` | Entende a demanda da Head, prioriza, distribui as tarefas e consolida tudo num resumo executivo (com as decisões que precisam dela). Também monta pautas de reunião de sócios e o resumo semanal |
+| Performance | `performance` | KPIs das contas contra a meta (investimento, leads, CPL, CPA/CAC, ROAS, conversão), dashboards, relatórios e alertas de desvio com plano de ação |
+| Customer Success | `cs` | Saúde da carteira, risco de churn, NPS, roteiros de check-in, planos de recuperação, renovação e upsell, mensagens prontas para o cliente |
+| Pessoas & Squads | `squads` | Capacidade e alocação dos squads, rituais (daily, weekly, 1:1), feedbacks, PDIs, onboarding e contratação |
+| Financeiro | `financeiro` | Margem por conta e por squad, precificação de escopo/fee, receita recorrente, forecast e inadimplência |
+| Planejamento | `planejamento` | Planejamento das contas pelo funil (aquisição, engajamento, monetização e retenção), metas, OKRs da unidade e briefings para os squads |
+| Qualidade | `qa` | Revisa relatórios, planejamentos, criativos e apresentações antes de chegarem à Head ou ao cliente; revisa as entregas dos agentes marcados com "revisão" |
+| Processos & SOPs | `documentador` | Procedimentos, playbooks, checklists de onboarding de cliente, atas de reunião e a documentação viva da operação |
 
-As funções e instruções de cada um ficam em `motores/time-dev.js` (e nos `motores.*.json` de exemplo); dá para mudar tudo em ⚙ Equipe. **Quem já usava o time antigo** (Pesquisador, Redator, Programador, Revisor) é convertido sozinho na primeira vez que o servidor sobe: cada papel mantém a IA que você tinha escolhido (Pesquisador → Requisitos, Programador → Back-end, Redator → Documentador, Revisor → QA), e Front-end e DevOps entram com a mesma IA do Back-end. As rotinas acompanham a troca de nomes.
+As funções e instruções de cada um ficam em `motores/time-v4.js` (e nos `motores.*.json` de exemplo); dá para mudar tudo em ⚙ Equipe. **Quem vem do agentscrets** (time de software house ou o time antigo de agência) é convertido sozinho na primeira vez que o servidor sobe: cada papel novo herda a IA do papel antigo mais parecido (Back-end → Performance, Designer → Customer Success, Front-end → Pessoas & Squads, DevOps → Financeiro, Requisitos → Planejamento, Revisor → Qualidade, Redator → Processos) e as rotinas acompanham a troca de nomes.
+
+**Ideias de ordens:**
+- "Quais contas estão fora da meta este mês e o que fazer em cada uma?" (Performance)
+- "Monte a pauta da reunião de sócios de segunda com os números da operação" (Braço Direito)
+- "Quais clientes têm mais risco de churn? Escreva o plano de recuperação de cada um" (Customer Success)
+- "O squad 2 está sobrecarregado? Proponha uma redistribuição de contas" (Pessoas & Squads)
+- "Calcule a margem de cada cliente com estes fees e o custo do time" (Financeiro)
+- "Escreva o SOP de onboarding de cliente novo, do kickoff ao primeiro relatório" (Processos & SOPs)
+
+Cadastre cada cliente em 📇 Clientes (escopo e fee, squad, metas e KPIs, canais e acessos, saúde da conta) para a ficha ir junto com as ordens.
 
 ## Rodando
 
@@ -145,12 +155,12 @@ Use a barra de baixo da tela:
 
 **Como ler a lista de ordens:**
 
-- Cada ordem sua é um cartão. As tarefas que o Tech Lead passou ao time ficam **dentro** do cartão (com barra de progresso), e a entrega final aparece no topo dele.
+- Cada ordem sua é um cartão. As tarefas que o Braço Direito passou ao time ficam **dentro** do cartão (com barra de progresso), e a entrega final aparece no topo dele.
 - A situação é contada do seu ponto de vista: ⏳ aguardando · ⚙️ em andamento · 🔁 tentando de novo · ⚠️ precisa de você · ✅ concluída. Uma ordem com plano só fica concluída quando todas as tarefas e a entrega final terminam.
 - **NOVA** marca o cartão com resposta que você ainda não abriu (clique no cartão para marcar como vista). O número na aba Ordens soma as novas e as que precisam de você.
 - Filtros no topo: Novas · Andamento · Atenção (o que precisa de você) · Concluídas · Todas. Cartões concluídos e já vistos ficam recolhidos.
 
-**Cancelar:** não quer mais uma ordem? Abra o cartão e clique em **⛔ Cancelar ordem** (ou no **✕** de uma tarefa do plano). Ela para, e tudo o que ela gerou também: tarefas do plano, entrega final, ajustes e revisões de PR. Ninguém tenta de novo, nada mais sobe ao GitHub e o Tech Lead fica sabendo que você cancelou (o piloto automático não refaz). Se um agente estava no meio da resposta, ela chega e fica guardada, mas não vira plano nem PR. O cartão fica como **⛔ cancelada** (no filtro Concluídas).
+**Cancelar:** não quer mais uma ordem? Abra o cartão e clique em **⛔ Cancelar ordem** (ou no **✕** de uma tarefa do plano). Ela para, e tudo o que ela gerou também: tarefas do plano, entrega final, ajustes e revisões de PR. Ninguém tenta de novo, nada mais sobe ao GitHub e o Braço Direito fica sabendo que você cancelou (o piloto automático não refaz). Se um agente estava no meio da resposta, ela chega e fica guardada, mas não vira plano nem PR. O cartão fica como **⛔ cancelada** (no filtro Concluídas).
 
 **Central de notificações (🔔 na barra lateral):** tudo o que o escritório avisa fica num lugar só, sem encher a tela:
 - **Uma linha por PR:** os avisos do mesmo PR viram uma linha só, com o estado atual ("em conflito", "mesclado"…). O histórico abre ao clicar em "histórico".
@@ -170,7 +180,7 @@ Sem o servidor rodando (ou no modo demo), os agentes simulados cumprem a ordem e
 Edite `src/agentes.js`. Cada agente tem:
 
 ```js
-{ id: 'backend', nome: 'Back-end', funcao: 'APIs, banco de dados e integrações', atividade: 'digitar', cor: '#3fb27f', cabelo: '#1a1a1a', pele: '#e0ac69' }
+{ id: 'performance', nome: 'Performance', funcao: 'KPIs das contas, dashboards e alertas', atividade: 'analisar', cor: '#3fb27f', cabelo: '#1a1a1a', pele: '#e0ac69' }
 ```
 
 As mesas são distribuídas sozinhas (8 por bloco); a sala cresce conforme a equipe aumenta.
@@ -185,11 +195,11 @@ O jeito principal: o próprio servidor chama a IA de cada agente. Você só conf
 
 ```json
 {
-  "orquestrador": { "provedor": "anthropic", "modelo": "claude-opus-5-5", "delegar": true, "funcao": "Tech Lead: arquitetura e tarefas", "instrucoes": "Você é o Tech Lead..." },
-  "backend":      { "provedor": "anthropic", "modelo": "claude-opus-5-5", "funcao": "APIs e banco de dados", "instrucoes": "Você é o Dev Back-end..." },
+  "orquestrador": { "provedor": "anthropic", "modelo": "claude-opus-5-5", "delegar": true, "funcao": "Braço direito da Head de Operações", "instrucoes": "Você é o Braço Direito..." },
+  "performance":  { "provedor": "anthropic", "modelo": "claude-opus-5-5", "funcao": "KPIs das contas e dashboards", "instrucoes": "Você é o analista de Performance..." },
   "qa":           { "provedor": "openai", "modelo": "<modelo da OpenAI>", "instrucoes": "..." },
-  "requisitos":   { "provedor": "gemini", "modelo": "<modelo do Gemini>", "instrucoes": "..." },
-  "devops":       { "webhook": "https://seu-n8n.com/webhook/devops" }
+  "planejamento": { "provedor": "gemini", "modelo": "<modelo do Gemini>", "instrucoes": "..." },
+  "financeiro":   { "webhook": "https://seu-n8n.com/webhook/financeiro" }
 }
 ```
 
@@ -242,7 +252,7 @@ O botão **📄 Documentação** abre os documentos que o **Documentador** mant�
 
 - **Cada cliente tem a sua documentação**, com visão geral, escopo e módulos, arquitetura e stack, regras de negócio, decisões, entregas, pendências e histórico. Ela parte da ficha do cliente e só recebe o que é daquele projeto. Escolha o projeto no seletor da janela.
 - **O documento Geral** cobre o escritório: a equipe e as IAs, a lista de projetos e os trabalhos que não são de nenhum cliente (ex.: "configure o backup do servidor").
-- **Como o escritório sabe de qual projeto é cada coisa:** pelo cliente escolhido na barra de ordens ou, se você não escolher, **reconhecendo pelo texto do pedido**. Vale o nome do cliente, o id ou os **apelidos** cadastrados na ficha ("ERP da padaria, PDV do Zé"), e também uma palavra que só aparece no nome de um cliente. O cartão mostra "👤 Padaria do Zé (reconhecido no pedido)". Pedidos que citam dois projetos ou nenhum ficam no Geral. As tarefas que o Tech Lead distribui, os ajustes e a entrega final herdam o projeto da ordem original.
+- **Como o escritório sabe de qual projeto é cada coisa:** pelo cliente escolhido na barra de ordens ou, se você não escolher, **reconhecendo pelo texto do pedido**. Vale o nome do cliente, o id ou os **apelidos** cadastrados na ficha ("ERP da padaria, PDV do Zé"), e também uma palavra que só aparece no nome de um cliente. O cartão mostra "👤 Padaria do Zé (reconhecido no pedido)". Pedidos que citam dois projetos ou nenhum ficam no Geral. As tarefas que o Braço Direito distribui, os ajustes e a entrega final herdam o projeto da ordem original.
 - O escritório anota as novidades (entregas, decisões do Crânio, avaliações, fichas) e, a cada poucos minutos, o Documentador reescreve só os documentos que tiveram novidade. **Atualizar agora** força o projeto aberto e **Baixar .md** salva o arquivo dele.
 - Os arquivos ficam em `dados/documentacao.md` (Geral) e `dados/documentacao/<cliente>.md`, cada um com a versão anterior em `.anterior`. Quem já tinha a documentação de antes encontra o conteúdo no Geral.
 - Para trocar o responsável ou o intervalo: `DOCUMENTADOR=documentador` e `DOC_INTERVALO_MIN=3` no `.env`. O documentador precisa ter uma IA configurada (não webhook).
@@ -265,22 +275,22 @@ A sala tem copa (balcão, cafeteira com vapor, pia, geladeira, bebedouro e mesa 
 - **Painel com abas** Ordens | Equipe, **redimensionável**: arraste a borda esquerda para alargar ou diminuir (duplo clique volta ao padrão). O botão » no canto **minimiza** o painel: ele vira uma abinha "Ordens" (com o número de novidades) e o escritório ocupa a tela toda. Cada ordem é um cartão com a fotinha do agente (um retrato 3x4 do bonequinho dele, com o cabelo, os óculos, o fone ou o capacete de cada um; também na lista da Equipe e nos avisos); respostas com código mostram só a explicação e os arquivos como etiquetas ("ver código" abre tudo).
 - **Avisos** no canto de baixo, sem cobrir a cena, quando chega uma entrega, com **Ver** e **↩ Ajustar** ali mesmo; também avisa ordens que chegam pelo Telegram e rotinas que disparam.
 - **Etiquetas na cena** sem se sobrepor (quem está atrás sobe um pouco). De longe aparecem só os nomes e as falas; a tarefa de cada um aparece quando você aproxima a câmera. Os balões mostram só a primeira frase.
-- **Equipe com cara própria**: cada bonequinho tem um penteado (topete, black power, rabo de cavalo, cabelo bagunçado, calvo, coque…), alguns com barba, e a equipe tem três mulheres (Requisitos, Designer e Documentadora, com cílios e brincos). Dá para mudar em `src/agentes.js` (`estilo`, `barba`, `feminina`, `brinco`, `cabelo`, `pele`).
-- **Conversas de verdade nas pausas**: um puxa o assunto e o outro responde, com falas de cada função (o QA comenta os testes, o DevOps o backup, o Requisitos o cliente) e assuntos do trabalho real (os clientes cadastrados e o que cada um entregou nas últimas horas). Ninguém fala de quem está na roda na terceira pessoa.
-- **Escritório vivo**: piso de carvalho, tapete de lã, quadros e prateleira com plantas na parede da marca, rack de servidor piscando no DevOps, celular no suporte no Front-end, post-its no Requisitos, manuais e caderno no Documentador, dia e noite pelo horário de Brasília (as luminárias acendem à noite; teste com `?hora=22` na URL), relógio de parede, mural com os seus clientes, estante, acessórios por função (fone no Designer, óculos no QA e no Requisitos, gorro no Back-end, boné no Front-end, capacete no DevOps, crachá no Tech Lead, lápis no Documentador), anel girando sobre quem está trabalhando, a folha da entrega voando até a sua mesa (passando pelo QA quando ele revisou), aviãozinho de papel nas ordens do Telegram e despertador nas rotinas.
+- **Equipe com cara própria**: cada bonequinho tem um penteado (topete, black power, rabo de cavalo, cabelo bagunçado, calvo, coque…), alguns com barba, e a equipe tem três mulheres (Customer Success, Pessoas & Squads e Processos, com cílios e brincos), além de você, a Head. Dá para mudar em `src/agentes.js` (`estilo`, `barba`, `feminina`, `brinco`, `cabelo`, `pele`).
+- **Conversas de verdade nas pausas**: um puxa o assunto e o outro responde, com falas de cada função (a Performance comenta o CPL, o CS o check-in, o Financeiro a margem) e assuntos do trabalho real (os clientes cadastrados e o que cada um entregou nas últimas horas). Ninguém fala de quem está na roda na terceira pessoa.
+- **Escritório vivo**: piso de carvalho, tapete de lã, quadros e prateleira com plantas na parede da marca, gráficos no segundo monitor da Performance e do Financeiro (com calculadora e cofrinho), celular no suporte do CS, post-its e livros no Planejamento e em Pessoas, manuais e caderno em Processos, dia e noite pelo horário de Brasília (as luminárias acendem à noite; teste com `?hora=22` na URL), relógio de parede, mural com os seus clientes, estante, acessórios por função (fone no Designer, óculos no QA e no Requisitos, gorro no Back-end, boné no Front-end, capacete no DevOps, crachá no Braço Direito, lápis no Documentador), anel girando sobre quem está trabalhando, a folha da entrega voando até a sua mesa (passando pelo QA quando ele revisou), aviãozinho de papel nas ordens do Telegram e despertador nas rotinas.
 - **Modo lista** (ícone de lista na barra): esconde o 3D e mostra ordens e equipe em tela cheia. No celular ele já começa assim; a escolha fica lembrada no aparelho.
 - **Sua marca**: no `.env`, `MARCA_NOME`, `MARCA_SUBTITULO` e `MARCA_COR` (hex) mudam o topo, a cor de destaque e a placa na parede. Fonte Montserrat.
 
 ## Clientes, ajustes, Revisor, internet e rotinas
 
 ### 📇 Clientes
-Cadastre uma ficha por cliente/projeto: segmento, escopo e módulos, usuários do sistema, stack e padrões técnicos, integrações e infraestrutura, regras de negócio e restrições, referências. Escolha o cliente na barra de ordens (aparece ao lado de "Para") e a ficha vai junto para o agente, inclusive nas tarefas que o Orquestrador distribui. No Telegram, comece a ordem com `#id-do-cliente` (ex.: `#padaria-do-ze /frontend site institucional`); `/clientes` lista os ids. As entregas guardam o cliente e o 📦 Entregas filtra por ele. Fica em `dados/clientes.json`.
+Cadastre uma ficha por cliente: segmento, escopo contratado e fee, squad e contatos, metas e KPIs, canais, ferramentas e acessos, saúde da conta e riscos, referências. Escolha o cliente na barra de ordens (aparece ao lado de "Para") e a ficha vai junto para o agente, inclusive nas tarefas que o Braço Direito distribui. No Telegram, comece a ordem com `#id-do-cliente` (ex.: `#padaria-do-ze /frontend site institucional`); `/clientes` lista os ids. As entregas guardam o cliente e o 📦 Entregas filtra por ele. Fica em `dados/clientes.json`.
 
 ### ↩ Ajustes
-Para refazer uma entrega, clique em **↩ ajustar** embaixo dela (no painel ou no 📦 Entregas) e diga o que mudar ("use PostgreSQL em vez de MySQL", "adicione paginação na tabela"). O mesmo agente recebe o pedido original, o que ele entregou e o seu ajuste, e devolve a versão completa. No Telegram, é só **responder à mensagem da entrega**.
+Para refazer uma entrega, clique em **↩ ajustar** embaixo dela (no painel ou no 📦 Entregas) e diga o que mudar ("compare com o mês passado", "deixe a mensagem mais curta"). O mesmo agente recebe o pedido original, o que ele entregou e o seu ajuste, e devolve a versão completa. No Telegram, é só **responder à mensagem da entrega**.
 
-### ✅ Revisão automática pelo QA
-Em ⚙ Equipe, marque **"Entregas passam pelo QA"** nos agentes que você quer revisados (ex.: Front-end e Back-end). O agente termina, o QA revisa o código e corrige, e você recebe a versão final com as observações dele (no painel, no `.md` e no Telegram). Se o Revisor falhar, a entrega chega sem revisão e com o aviso. Para usar outro agente como revisor: `REVISOR=<id>` no `.env`. Cada revisão é mais uma chamada de IA: atenção às cotas gratuitas.
+### ✅ Revisão automática pela Qualidade
+Em ⚙ Equipe, marque **"Entregas passam pela Qualidade"** nos agentes que você quer revisados (ex.: Performance e Customer Success). O agente termina, a Qualidade revisa e corrige, e você recebe a versão final com as observações dele (no painel, no `.md` e no Telegram). Se o Revisor falhar, a entrega chega sem revisão e com o aviso. Para usar outro agente como revisor: `REVISOR=<id>` no `.env`. Cada revisão é mais uma chamada de IA: atenção às cotas gratuitas.
 
 ### 🌐 Pesquisa na internet
 Em ⚙ Equipe, marque **"Pesquisa na internet"** (Claude ou Gemini). O agente busca na web e a resposta termina com **Fontes:**. No Gemini usa a busca do Google (grátis dentro do limite do plano); no Claude, a ferramenta de busca da Anthropic (cobrada à parte por busca).
@@ -290,15 +300,15 @@ Ordens que saem sozinhas: nos dias da semana escolhidos ou uma vez por mês, no 
 
 **☀ Resumo de ontem:** na janela 🗓 Rotinas, o botão **"Criar Resumo de ontem todo dia às 8h"** cria uma rotina que junta tudo o que a equipe fez no dia anterior: cada entrega com agente, cliente, trecho, ajustes, revisão e a sua avaliação, mais os erros e as ordens sem resposta. Esse material vai para o Documentador, que escreve o resumo com visão geral, entregas por cliente, destaques, o que deu errado e as pendências do dia. Ele chega como qualquer entrega: no painel, no 📦 e no Telegram. Qualquer rotina pode fazer isso: basta marcar "Juntar tudo o que a equipe fez ontem".
 
-### 🤖 Piloto automático do Tech Lead (você não precisa dar ordens)
-Ligado por padrão. De tempos em tempos, para cada projeto cadastrado em 📇 Clientes, o Tech Lead recebe a ficha, a documentação do projeto, as últimas entregas e os problemas em aberto, **decide sozinho o próximo passo** (até 4 tarefas, na ordem certa) e põe o time para trabalhar, sem pedir permissão. O supervisor acompanha até a entrega final, que chega no painel, no 📦 e no Telegram.
+### 🤖 Piloto automático do Braço Direito (você não precisa dar ordens)
+Ligado por padrão. De tempos em tempos, para cada cliente cadastrado em 📇 Clientes, o Braço Direito recebe a ficha, a documentação do projeto, as últimas entregas e os problemas em aberto, **decide sozinho o próximo passo** (até 4 tarefas, na ordem certa) e põe o time para trabalhar, sem pedir permissão. O supervisor acompanha até a entrega final, que chega no painel, no 📦 e no Telegram.
 
 Quando ele não age:
 - já há trabalho em andamento no projeto;
 - da última vez ele disse que não havia o que fazer (por exemplo, "falta o cliente enviar o logo") e nada novo aconteceu desde então. Uma ordem sua, uma entrega ou a ficha alterada contam como novidade; sem novidade, ele olha de novo em 1 dia;
 - o limite de planos do dia foi atingido, ou está fora do horário.
 
-Na janela **🗓 Rotinas** ficam o liga/desliga, o intervalo (padrão: 60 min), o limite por dia (padrão: 8), o horário (padrão: das 8h às 20h, de Brasília) e a situação de cada projeto. Cada plano gasta chamadas de IA do Tech Lead e do time: ajuste o limite à sua cota.
+Na janela **🗓 Rotinas** ficam o liga/desliga, o intervalo (padrão: 60 min), o limite por dia (padrão: 8), o horário (padrão: das 8h às 20h, de Brasília) e a situação de cada projeto. Cada plano gasta chamadas de IA do Braço Direito e do time: ajuste o limite à sua cota.
 
 ### 🔁 Supervisor: nenhuma tarefa fica pela metade
 - **Tentativas automáticas:** se uma tarefa dá erro (limite da IA, chave errada, provedor fora do ar) ou é interrompida porque o servidor reiniciou, ela é tentada de novo sozinha. As esperas crescem: 1, 3, 10, 30 e 60 minutos. O cartão fica **com erro** e mostra a próxima tentativa, com o botão **↻ Tentar agora**.
@@ -343,6 +353,8 @@ As IAs gratuitas têm limite por minuto e por dia. Quando a IA de um agente resp
 Para gastar menos cota: espalhe os agentes por provedores diferentes, use a revisão do QA só onde vale a pena e aumente `DOC_INTERVALO_MIN` (a documentação viva também chama a IA do Redator).
 
 ## GitHub: cada projeto vira um repositório (código, PRs e testes)
+
+> **Opcional.** Só liga com `GITHUB_TOKEN` no `.env`. Na operação de marketing a maior parte das entregas é texto (relatórios, planos, SOPs), então você pode deixar desligado; ele serve para quando o time gerar código (landing pages, scripts de automação).
 
 Com `GITHUB_TOKEN` no `.env`, o código que o time escreve deixa de ser só texto no chat:
 
@@ -407,8 +419,8 @@ Como mandar ordens:
 
 | Mensagem | Vai para |
 |---|---|
-| `preciso da tela de login do CRM` | o 🔮 Crânio escolhe (com o Laya ligado); sem ele, o Orquestrador |
-| `/backend crie a API de pedidos…` (ou `@backend …`) | o agente indicado (o Crânio ainda confere) |
+| `quais contas estão fora da meta?` | o 🔮 Crânio escolhe (com o Laya ligado); sem ele, o Braço Direito |
+| `/performance compare o CPL das contas…` (ou `@performance …`) | o agente indicado (o Crânio ainda confere) |
 | `/todos reunião às 15h` | toda a equipe |
 | `/equipe` | mostra quem está fazendo o quê |
 | `/ajuda` | lista os comandos e os agentes |

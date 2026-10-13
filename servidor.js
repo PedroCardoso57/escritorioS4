@@ -798,7 +798,7 @@ await carregar();
 await clientes.carregar(); // antes da documentação: cada cliente tem o seu documento
 await documentacao.carregar();
 await rotinas.carregar();
-// time antigo (agência de marketing) → time de desenvolvimento, uma vez só
+// time anterior (software house ou agência) → time V4, uma vez só
 const idsTrocados = await motores.migrarTimeDev();
 if (idsTrocados) await rotinas.renomearAgentes(idsTrocados);
 // agentes que saíram da equipe (tinham IA embutida) somem do escritório

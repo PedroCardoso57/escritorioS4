@@ -113,7 +113,7 @@ export function criarDocumentacao({ dadosDir, equipe, rotulo, naFila, registrarS
     if (projeto === GERAL) {
       const time = Object.entries(cfg).map(([id, c]) => `- ${id}: ${rotulo(c)}${c.funcao ? ` — ${c.funcao}` : ''}`).join('\n');
       const clientes = projetos.listar().map((c) => `- ${c.nome}`).join('\n') || '(nenhum cadastrado)';
-      return `Você é o agente "${nome}" e mantém a DOCUMENTAÇÃO GERAL do escritório: uma software house de agentes de IA que cria sistemas (ERP, CRM) e sites.
+      return `Você é o agente "${nome}" e mantém a DOCUMENTAÇÃO GERAL do escritório: o time de agentes de IA que apoia a Head de Operações de Marketing (sócia) de uma unidade da V4 Company.
 Este documento é sobre o escritório como um todo: a equipe e as IAs, a lista de projetos, decisões gerais e trabalhos que não são de nenhum cliente. Cada cliente tem a SUA documentação separada: aqui, sobre um projeto de cliente, só uma linha na seção "Projetos" apontando que ele existe.
 
 Regras:

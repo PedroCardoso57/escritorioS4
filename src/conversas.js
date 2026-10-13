@@ -6,7 +6,7 @@
 //   {outro}   nome de quem está ouvindo        {cliente}  um cliente cadastrado
 //   {entrega} o que quem fala entregou por último
 // Regras para não ficar sem sentido:
-//   quem  — só puxa esse assunto quem tem essa função (ex.: o QA fala dos testes)
+//   quem  — só puxa esse assunto quem tem essa função (ex.: a Qualidade fala das revisões)
 //   menciona — o diálogo fala dessa pessoa: não é usado se ela estiver na roda
 //   precisa — 'cliente' ou 'entrega': só aparece se houver esse contexto
 
@@ -16,34 +16,35 @@ const DIALOGOS = [
   { falas: [['A', 'E aí, {outro}, como tá aí?'], ['B', 'Corrido, mas andando. E você?'], ['A', 'Mesma coisa. Uma pausa ajuda.']] },
   { falas: [['A', 'Esse café tá mais forte hoje.'], ['B', 'Alguém exagerou no pó 😅']] },
   { falas: [['A', 'Fez o que no fim de semana?'], ['B', 'Descansei, finalmente.'], ['A', 'Merecido.']] },
-  { falas: [['A', 'Tô pensando em refatorar uma parte do código.'], ['B', 'Faz em PR pequeno, fica mais fácil de revisar.'], ['A', 'Boa ideia.']] },
-  { falas: [['A', 'Viu que o último deploy passou liso?'], ['B', 'Vi! Nenhum erro no log.'], ['A', 'Assim que eu gosto.']] },
-  { falas: [['A', '{outro}, depois me mostra como você resolveu aquela parte?'], ['B', 'Mostro sim, é mais simples do que parece.']] },
+  { falas: [['A', 'Ouviu o sino mais cedo?'], ['B', 'Ouvi! Mais uma entrega saindo.'], ['A', 'Assim que eu gosto.']] },
+  { falas: [['A', 'Fechamento do mês chegando…'], ['B', 'Relatórios em dia?'], ['A', 'Quase todos. Falta revisar dois.']] },
+  { falas: [['A', '{outro}, depois me mostra aquela planilha que você montou?'], ['B', 'Mostro sim, é mais simples do que parece.']] },
   { falas: [['A', 'Água gelada, finalmente.'], ['B', 'O bebedouro tava quente ontem, né?']] },
-  { falas: [['A', 'Qual stack você usaria num app novo hoje?'], ['B', 'Depende do cliente… mas TypeScript em tudo.'], ['A', 'Concordo.']] },
+  { falas: [['A', 'Qual etapa do funil mais trava os clientes hoje?'], ['B', 'Monetização. Lead chega, mas o comercial não converte.'], ['A', 'Vale levar isso para os planejamentos.']] },
   // com o trabalho real
-  { precisa: 'cliente', falas: [['A', 'O projeto {cliente} tá ficando bom, hein.'], ['B', 'Tá sim! O cliente vai gostar.']] },
-  { precisa: 'cliente', falas: [['A', 'Qual a próxima etapa do projeto {cliente}?'], ['B', 'O Tech Lead vai definir na próxima rodada.']], menciona: ['orquestrador'] },
-  { precisa: 'entrega', falas: [['A', 'Acabei de entregar: {entrega}.'], ['B', 'Boa! Rápido, hein.'], ['A', 'Agora é esperar o CI passar.']] },
-  { precisa: 'entrega', falas: [['A', 'Terminei {entrega}.'], ['B', 'Show. Precisa de revisão?'], ['A', 'O QA já vai dar uma olhada.']], menciona: ['qa'] },
+  { precisa: 'cliente', falas: [['A', 'A conta {cliente} tá indo bem, hein.'], ['B', 'Tá sim! O cliente vai gostar do relatório.']] },
+  { precisa: 'cliente', falas: [['A', 'Qual o próximo passo da conta {cliente}?'], ['B', 'O Braço Direito vai definir na próxima rodada.']], menciona: ['orquestrador'] },
+  { precisa: 'entrega', falas: [['A', 'Acabei de entregar: {entrega}.'], ['B', 'Boa! Rápido, hein.'], ['A', 'Agora é a Head aprovar.']] },
+  { precisa: 'entrega', falas: [['A', 'Terminei {entrega}.'], ['B', 'Show. Precisa de revisão?'], ['A', 'A Qualidade já vai dar uma olhada.']], menciona: ['qa'] },
   // de cada função (quem puxa o assunto)
-  { quem: 'qa', falas: [['A', '{outro}, testei sua última entrega. Ficou redondinha.'], ['B', 'Ufa! Valeu pelo cuidado.']] },
-  { quem: 'qa', falas: [['A', 'Achei um caso de borda no cadastro, já pedi o ajuste.'], ['B', 'Ainda bem que você pegou antes do cliente.']] },
-  { quem: 'backend', falas: [['A', 'Subi a API nova. Se precisar de algum endpoint, me chama.'], ['B', 'Valeu, vou integrar hoje.']] },
-  { quem: 'backend', falas: [['A', 'Esse banco tá precisando de um índice.'], ['B', 'Tá lento?'], ['A', 'Um pouco. Resolvo depois do café.']] },
-  { quem: 'frontend', falas: [['A', 'A tela nova ficou ótima no celular.'], ['B', 'Testou em tela pequena também?'], ['A', 'Testei, tá tudo certo.']] },
-  { quem: 'designer', falas: [['A', '{outro}, o que achou das cores novas?'], ['B', 'Ficaram ótimas, bem mais limpo.'], ['A', 'Que bom! Deu trabalho achar o tom.']] },
-  { quem: 'designer', falas: [['A', 'Tô montando o protótipo da próxima tela.'], ['B', 'Manda o link quando terminar.']] },
-  { quem: 'devops', falas: [['A', 'O backup de hoje rodou certinho.'], ['B', 'Boa, dá pra dormir tranquilo.']] },
-  { quem: 'devops', falas: [['A', 'O servidor tá com folga de memória.'], ['B', 'Então dá pra subir mais um projeto?'], ['A', 'Dá sim.']] },
-  { quem: 'documentador', falas: [['A', 'Atualizei a documentação. Dá uma olhada quando puder.'], ['B', 'Pode deixar, eu leio hoje.']] },
-  { quem: 'requisitos', falas: [['A', 'O cliente pediu mais uma tela.'], ['B', 'Clássico 😄 Já tá no backlog?'], ['A', 'Já, prioridade média.']] },
-  { quem: 'requisitos', precisa: 'cliente', falas: [['A', 'Revisei as regras de negócio do projeto {cliente}.'], ['B', 'Mudou muita coisa?'], ['A', 'Só o fluxo de pagamento.']] },
-  { quem: 'orquestrador', falas: [['A', 'Como estão as tarefas, {outro}?'], ['B', 'Quase tudo pronto, falta revisar.'], ['A', 'Perfeito, me avisa quando subir.']] },
+  { quem: 'qa', falas: [['A', '{outro}, revisei sua última entrega. Ficou redondinha.'], ['B', 'Ufa! Valeu pelo cuidado.']] },
+  { quem: 'qa', falas: [['A', 'Achei um número que não batia no relatório, já pedi o ajuste.'], ['B', 'Ainda bem que você pegou antes do cliente.']] },
+  { quem: 'performance', falas: [['A', 'O CPL de duas contas subiu essa semana.'], ['B', 'Já sabe o motivo?'], ['A', 'Criativo cansado. Já sinalizei para o squad.']] },
+  { quem: 'performance', falas: [['A', 'Atualizei o dashboard. Tá quase tudo no verde.'], ['B', 'E o que tá no vermelho?'], ['A', 'Uma conta só, com plano de ação pronto.']] },
+  { quem: 'cs', falas: [['A', 'Fiz o check-in com um cliente que tava sumido.'], ['B', 'E aí, tudo certo?'], ['A', 'Tava inseguro com os resultados. Marcamos reunião de alinhamento.']] },
+  { quem: 'cs', falas: [['A', 'O NPS desse mês veio melhor.'], ['B', 'Boa! O que mais elogiaram?'], ['A', 'A proximidade do squad.']] },
+  { quem: 'squads', falas: [['A', 'Um dos gestores tá com conta demais.'], ['B', 'Dá para redistribuir?'], ['A', 'Dá, já montei a proposta para a Head.']] },
+  { quem: 'squads', falas: [['A', '{outro}, tem um tempinho para o seu 1:1 amanhã?'], ['B', 'Tenho sim, de manhã é melhor.']] },
+  { quem: 'financeiro', falas: [['A', 'Fechei a margem por conta do mês.'], ['B', 'Alguma surpresa?'], ['A', 'Uma conta dando mais trabalho do que o fee paga.']] },
+  { quem: 'financeiro', falas: [['A', 'O forecast do trimestre tá bonito.'], ['B', 'Contando as renovações?'], ['A', 'Contando, e com o churn previsto descontado.']] },
+  { quem: 'planejamento', falas: [['A', 'Tô fechando o planejamento do próximo trimestre.'], ['B', 'Já tem as metas por etapa do funil?'], ['A', 'Tenho, falta validar o investimento.']] },
+  { quem: 'planejamento', precisa: 'cliente', falas: [['A', 'Revisei o planejamento da conta {cliente}.'], ['B', 'Mudou muita coisa?'], ['A', 'Só a divisão de verba entre os canais.']] },
+  { quem: 'documentador', falas: [['A', 'Atualizei o SOP de onboarding. Dá uma olhada quando puder.'], ['B', 'Pode deixar, eu leio hoje.']] },
+  { quem: 'orquestrador', falas: [['A', 'Como estão as demandas, {outro}?'], ['B', 'Quase tudo pronto, falta revisar.'], ['A', 'Perfeito, me avisa para eu levar para a Head.']] },
   { quem: 'orquestrador', minimo: 3, falas: [['A', 'Bom trabalho essa semana, pessoal.'], ['B', 'Valeu! O time tá afiado.']] },
   // na reunião, com três
   { minimo: 3, falas: [['A', 'Bom, vamos alinhar rapidinho?'], ['B', 'Do meu lado tá tudo andando.'], ['C', 'Do meu também, sem bloqueio.'], ['A', 'Ótimo, então seguimos.']] },
-  { minimo: 3, falas: [['A', 'Alguém precisa de ajuda com alguma coisa?'], ['B', 'Por enquanto não.'], ['C', 'Talvez mais tarde, com os testes.']] },
+  { minimo: 3, falas: [['A', 'Alguém precisa de ajuda com alguma coisa?'], ['B', 'Por enquanto não.'], ['C', 'Talvez mais tarde, com o relatório.']] },
 ];
 
 const sortear = (lista) => lista[Math.floor(Math.random() * lista.length)];

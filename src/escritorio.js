@@ -706,7 +706,7 @@ export function criarEstacao(agente) {
   if (agente.chefe) {
     // encosto alto e plaquinha de chefe
     cadeira.add(caixa(0.5, 0.45, 0.07, mat('#3b2a20'), 0, 1.25, -0.25));
-    const placa = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.1), new THREE.MeshBasicMaterial({ map: texturaTexto('CHEFE', '#f4d35e', '#2a2d35', 72) }));
+    const placa = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.1), new THREE.MeshBasicMaterial({ map: texturaTexto(agente.feminina ? 'HEAD OPS' : 'CHEFE', '#f4d35e', '#2a2d35', 72) }));
     placa.position.set(0.45, altura + 0.08, zCentro - 0.3);
     placa.rotation.x = -0.5;
     g.add(placa);
@@ -734,8 +734,8 @@ export function criarEstacao(agente) {
     for (let i = 0; i < 3; i++) g.add(caixa(0.24, 0.012, 0.32, mat('#f4f1ea'), 0.55, altura + 0.035 + i * 0.013, zCentro + 0.1).rotateY(i * 0.08));
   }
   // adereços por função (pelo id do agente)
-  if (['backend', 'frontend', 'programador'].includes(agente.id)) {
-    // segundo monitor, virado de lado, com "código"
+  if (['performance', 'financeiro', 'backend', 'frontend', 'programador'].includes(agente.id)) {
+    // segundo monitor, virado de lado: gráficos (Performance, Financeiro) ou "código"
     const m2 = new THREE.Group();
     m2.position.set(0.62, altura + 0.02, zCentro + 0.12);
     m2.rotation.y = -0.45;
@@ -744,18 +744,23 @@ export function criarEstacao(agente) {
     const codigo = canvasPlano(0.46, 0.3, 128, 84);
     const ctx = codigo.userData.canvas.getContext('2d');
     ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, 128, 84);
-    ['#7ee787', '#79c0ff', '#ff7b72', '#d2a8ff'].forEach((c, i) => { for (let l = i; l < 10; l += 4) { ctx.fillStyle = c; ctx.fillRect(6 + (l % 3) * 8, 6 + l * 7.5, 30 + ((l * 23) % 70), 3); } });
+    if (['performance', 'financeiro'].includes(agente.id)) {
+      // painel de KPIs: barras e linha de tendência
+      [22, 30, 26, 40, 48, 58].forEach((h, i) => { ctx.fillStyle = i === 5 ? '#e30613' : '#3f3f46'; ctx.fillRect(10 + i * 19, 78 - h, 13, h); });
+      ctx.strokeStyle = agente.id === 'financeiro' ? '#e0b23c' : '#3fb27f'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(10, 50); ctx.lineTo(48, 40); ctx.lineTo(76, 32); ctx.lineTo(118, 10); ctx.stroke();
+    } else ['#7ee787', '#79c0ff', '#ff7b72', '#d2a8ff'].forEach((c, i) => { for (let l = i; l < 10; l += 4) { ctx.fillStyle = c; ctx.fillRect(6 + (l % 3) * 8, 6 + l * 7.5, 30 + ((l * 23) % 70), 3); } });
     codigo.material.map.needsUpdate = true;
     codigo.position.set(0, 0.4, -0.019);
     codigo.rotation.y = Math.PI;
     m2.add(codigo);
     g.add(m2);
   }
-  if (['requisitos', 'pesquisador'].includes(agente.id)) {
+  if (['planejamento', 'squads', 'requisitos', 'pesquisador'].includes(agente.id)) {
     const coresLivro = ['#e11d2a', '#3f3f46', '#fbbf24', '#60a5fa'];
     coresLivro.forEach((c, i) => g.add(caixa(0.3 - i * 0.02, 0.05, 0.22, mat(c), -0.62, altura + 0.05 + i * 0.05, zCentro - 0.02).rotateY((i - 1.5) * 0.12)));
   }
-  if (agente.id === 'designer') {
+  if (['planejamento', 'designer'].includes(agente.id)) {
     // pote de lápis coloridos
     g.add(cilindro(0.05, 0.05, 0.12, mat('#18181b'), 0.42, altura + 0.085, zCentro + 0.12));
     ['#e11d2a', '#fbbf24', '#60a5fa', '#34d399'].forEach((c, i) => {
@@ -789,6 +794,20 @@ export function criarEstacao(agente) {
     // adesivo de baleia (Docker) na caneca? um pequeno terminal verde na mesa
     g.add(caixa(0.22, 0.015, 0.16, mat('#14532d', { emissive: '#22c55e', emissiveIntensity: 0.25 }), 0.5, altura + 0.035, zCentro - 0.22));
   }
+  if (agente.id === 'financeiro') {
+    // calculadora e cofrinho
+    const calc = new THREE.Group();
+    calc.position.set(-0.55, altura + 0.03, zCentro - 0.12);
+    calc.rotation.y = 0.2;
+    calc.add(caixa(0.13, 0.025, 0.18, mat('#27272a'), 0, 0, 0));
+    calc.add(caixa(0.1, 0.005, 0.04, mat('#a3e635', { emissive: '#a3e635', emissiveIntensity: 0.3 }), 0, 0.015, 0.055));
+    for (let k = 0; k < 9; k++) calc.add(caixa(0.022, 0.008, 0.022, mat(k === 8 ? '#e30613' : '#d4d4d8'), -0.032 + (k % 3) * 0.032, 0.016, -0.005 - Math.floor(k / 3) * 0.032));
+    g.add(calc);
+    const cofre = new THREE.Mesh(new THREE.SphereGeometry(0.07, 14, 10), mat('#f9a8d4', { roughness: 0.5 }));
+    cofre.scale.set(1.25, 1, 1);
+    cofre.position.set(0.6, altura + 0.095, zCentro + 0.15);
+    g.add(cofre);
+  }
   if (agente.id === 'documentador') {
     // pilha de manuais e caderno aberto
     ['#f4f1ea', '#e7e5e4', '#fafaf9'].forEach((c, i) => g.add(caixa(0.26, 0.015, 0.34, mat(c), 0.55, altura + 0.035 + i * 0.016, zCentro + 0.08).rotateY(i * 0.1 - 0.1)));
@@ -799,8 +818,8 @@ export function criarEstacao(agente) {
     caderno.add(caixa(0.012, 0.02, 0.28, mat(agente.cor), 0, 0.004, 0));
     g.add(caderno);
   }
-  if (agente.id === 'frontend') {
-    // celular num suporte mostrando a versão mobile
+  if (['cs', 'frontend'].includes(agente.id)) {
+    // celular num suporte (WhatsApp dos clientes, no CS) mostrando a versão mobile
     const cel = new THREE.Group();
     cel.position.set(-0.55, altura + 0.03, zCentro + 0.12);
     cel.rotation.y = 0.35;
@@ -812,7 +831,7 @@ export function criarEstacao(agente) {
     cel.add(telaCel);
     g.add(cel);
   }
-  if (['requisitos', 'pesquisador'].includes(agente.id)) {
+  if (['planejamento', 'squads', 'requisitos', 'pesquisador'].includes(agente.id)) {
     // post-its na divisória
     ['#fde68a', '#fbcfe8', '#bfdbfe', '#bbf7d0', '#fde68a'].forEach((c, i) => {
       const nota = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1), mat(c, { side: THREE.DoubleSide }));

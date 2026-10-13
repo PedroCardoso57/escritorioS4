@@ -4,15 +4,15 @@
 import { api, el } from './configuracao.js';
 
 const CAMPOS = [
-  ['nome', 'Nome', 'input', 'Ex.: Padaria do Zé'],
-  ['apelidos', 'Como o projeto aparece nos seus pedidos', 'input', 'Ex.: ERP da padaria, sistema do Zé, PDV Zé (separe por vírgula)'],
-  ['nicho', 'Segmento', 'input', 'Ex.: varejo de alimentos, 3 lojas'],
-  ['produtos', 'Escopo e módulos', 'textarea', 'O que vamos construir: ERP (estoque, vendas, financeiro), CRM, site institucional…'],
-  ['publico', 'Usuários do sistema', 'textarea', 'Quem usa: vendedores, gerente, financeiro, clientes no site… e quantos'],
-  ['tom', 'Stack e padrões técnicos', 'textarea', 'Ex.: React + Node + PostgreSQL, hospedagem na VPS, padrões de código'],
-  ['observacoes', 'Integrações e infraestrutura', 'textarea', 'Ex.: nota fiscal, pagamento (Pix), WhatsApp, sistema atual, domínio, servidor'],
-  ['evitar', 'Regras de negócio e restrições', 'textarea', 'Regras importantes, LGPD, o que não pode, prazos e orçamento'],
-  ['exemplos', 'Referências', 'textarea', 'Sistemas ou sites parecidos, links, repositório do projeto'],
+  ['nome', 'Nome', 'input', 'Ex.: Clínica Sorriso'],
+  ['apelidos', 'Como o cliente aparece nos seus pedidos', 'input', 'Ex.: Sorriso, clínica do Dr. Paulo (separe por vírgula)'],
+  ['nicho', 'Segmento', 'input', 'Ex.: odontologia, 3 unidades'],
+  ['produtos', 'Escopo contratado e fee', 'textarea', 'Ex.: tráfego pago (Meta e Google), social media, CRM · fee R$ …/mês · cliente desde …, renovação em …'],
+  ['publico', 'Squad e contatos', 'textarea', 'Quem atende: gestor de tráfego, designer, social media, account… e o contato do lado do cliente'],
+  ['tom', 'Metas e KPIs', 'textarea', 'Ex.: 300 leads/mês, CPL até R$ 25, ROAS 4, meta de faturamento'],
+  ['observacoes', 'Canais, ferramentas e acessos', 'textarea', 'Ex.: Meta Ads, Google Ads, GA4, CRM do cliente, link do dashboard'],
+  ['evitar', 'Saúde da conta e riscos', 'textarea', 'NPS, último check-in, reclamações, risco de churn, o que não pode (LGPD, promessas)'],
+  ['exemplos', 'Referências e links', 'textarea', 'Planejamento, relatórios, pasta no Drive, concorrentes'],
 ];
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const TEXTO_RESUMO = 'Escreva o resumo completo do que a equipe fez ontem, usando só o material anexo (não invente nada). Organize em: 1) Visão geral com os números do dia; 2) O que foi entregue, agrupado por cliente (e o que foi interno), com uma linha sobre cada entrega; 3) Destaques (o que ficou melhor e o que o chefe aprovou); 4) O que deu errado: erros, entregas reprovadas e o motivo provável; 5) Pendências e sugestões do que fazer hoje.';
@@ -101,7 +101,7 @@ export function criarGestao({ servidorAtivo, nomeDe, agentesVisiveis, aoMudarCli
   let rotinas = [];
   let editando = null; // rotina aberta no formulário (null = nova)
 
-  // Piloto automático do Tech Lead: decide sozinho o próximo passo de cada projeto.
+  // Piloto automático do Braço Direito: decide sozinho o próximo passo de cada projeto.
   const SITUACAO = { parado: 'decide na próxima conferência', ocupado: 'time trabalhando', esperando: 'aguardando novidade ou o intervalo' };
   async function painelAutopiloto() {
     let a;
@@ -125,8 +125,8 @@ export function criarGestao({ servidorAtivo, nomeDe, agentesVisiveis, aoMudarCli
       ? el('ul', { class: 'projetos-piloto' }, a.projetos.map((p) => el('li', {}, el('b', {}, p.nome), ` · ${SITUACAO[p.situacao] || p.situacao}${p.ultimaVez ? ` · última decisão ${new Date(p.ultimaVez).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}` : ''}`)))
       : el('p', { class: 'suave' }, 'Cadastre os projetos em 📇 Clientes: o piloto automático trabalha em cima de cada ficha.');
     const caixa = el('section', { class: `autopiloto${a.ativo ? '' : ' desligado'}` },
-      el('label', { class: 'linha titulo-piloto' }, ativo, el('span', {}, '🤖 Piloto automático do Tech Lead'), status),
-      el('p', { class: 'suave' }, 'Sem você dar ordens: o Tech Lead revisa cada projeto (ficha, documentação, entregas e problemas), decide o próximo passo e põe o time para trabalhar. Quando não há o que fazer, ele espera alguma novidade.'),
+      el('label', { class: 'linha titulo-piloto' }, ativo, el('span', {}, '🤖 Piloto automático do Braço Direito'), status),
+      el('p', { class: 'suave' }, 'Sem você dar ordens: o Braço Direito revisa cada projeto (ficha, documentação, entregas e problemas), decide o próximo passo e põe o time para trabalhar. Quando não há o que fazer, ele espera alguma novidade.'),
       el('div', { class: 'campos-piloto' },
         el('label', {}, el('span', {}, 'A cada (min)'), intervalo),
         el('label', {}, el('span', {}, 'Máx. planos/dia'), maximo),
@@ -175,7 +175,7 @@ export function criarGestao({ servidorAtivo, nomeDe, agentesVisiveis, aoMudarCli
     const f = el('form', { class: 'cfg-form' });
     const resultado = el('p', { class: 'resultado', role: 'status' });
     const nome = el('input', { name: 'nome', value: r?.nome || '', placeholder: 'Ex.: Grade da semana', maxlength: 80 });
-    const texto = el('textarea', { name: 'texto', rows: 3, placeholder: 'Ex.: revise o que foi entregue ontem no CRM e liste os bugs abertos' });
+    const texto = el('textarea', { name: 'texto', rows: 3, placeholder: 'Ex.: liste as contas fora da meta e o plano de ação de cada uma' });
     texto.value = r?.texto || '';
     const para = el('select', { name: 'para' },
       el('option', { value: 'auto', selected: !r || r.para === 'auto' }, '🔮 Crânio decide (ou o Orquestrador)'),

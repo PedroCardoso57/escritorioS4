@@ -1,6 +1,6 @@
-// Piloto automático do Tech Lead: você não precisa ficar dando ordens.
+// Piloto automático do Braço Direito: você não precisa ficar dando ordens.
 //
-// De tempos em tempos, para cada projeto (cliente cadastrado), o Tech Lead
+// De tempos em tempos, para cada projeto (cliente cadastrado), o Braço Direito
 // recebe a ficha, a documentação do projeto, as últimas entregas e o que está
 // pendente, e decide sozinho o próximo passo: cria o plano e o time executa
 // (o supervisor acompanha até a entrega final). Ele não age num projeto quando:
@@ -76,13 +76,13 @@ export function criarAutopiloto({ dadosDir, ordens, equipe, clientes, criarOrdem
       .map((o) => `- "${o.texto.slice(0, 160)}"`).join('\n') || '(nenhuma)';
     const problemas = ordens.filter((o) => o.cliente === projeto && !o.cancelada && (o.desistida || o.estado === 'falhou'))
       .slice(-8).map((o) => `- "${o.texto.slice(0, 120)}" (${o.motivoDesistencia || 'com erro'})`).join('\n') || '(nenhum)';
-    return `VOCÊ ESTÁ NO PILOTO AUTOMÁTICO. O chefe não vai dar ordens: decida sozinho, sem pedir permissão, o próximo passo do projeto "${nome}" e já distribua as tarefas.
+    return `VOCÊ ESTÁ NO PILOTO AUTOMÁTICO. O chefe não vai dar ordens: decida sozinho, sem pedir permissão, o próximo passo da conta "${nome}" e já distribua as tarefas.
 
 Como decidir:
-- Compare o escopo da ficha do cliente com o que já foi entregue e documentado. O objetivo é levar o projeto até ficar pronto para uso (requisitos, telas, front-end, back-end, testes, deploy e documentação).
+- Compare as metas, o escopo e a saúde da conta (ficha do cliente) com o que já foi entregue e documentado. O objetivo é manter a conta saudável e batendo a meta: planejamento em dia, KPIs acompanhados, cliente bem atendido (check-ins, relatórios), riscos de churn tratados, margem sob controle e processos documentados.
 - Crie no máximo 4 tarefas, as próximas na ordem certa (o que depende de outra coisa espera a próxima rodada). Cada tarefa precisa de todo o contexto para o especialista trabalhar sozinho.
-- Não repita o que já foi entregue: continue de onde parou, corrija o que deu errado e o que o chefe avaliou mal.
-- Se o projeto estiver pronto, ou se faltar uma informação que só o cliente pode dar, NÃO crie tarefas: na "resposta", diga em poucas linhas o que falta e o que precisa do chefe.
+- Não repita o que já foi entregue: continue de onde parou, corrija o que deu errado e o que a Head avaliou mal.
+- Se a conta estiver em dia, ou se faltar uma informação que só a Head ou o cliente podem dar (dados das plataformas, decisão de fee, aprovação), NÃO crie tarefas: na "resposta", diga em poucas linhas o que falta e o que precisa dela.
 
 DOCUMENTAÇÃO DO PROJETO:
 ${doc.slice(0, 20000)}
@@ -112,7 +112,7 @@ ${canceladas}`;
       });
       estado.projetos[c.id] = { ultimaVez: new Date().toISOString(), ordemId: ordem.id };
       estado.planosHoje++;
-      console.log(`[piloto automático] ${c.nome}: o Tech Lead está decidindo o próximo passo (${estado.planosHoje}/${cfg.maxPlanosDia} hoje)`);
+      console.log(`[piloto automático] ${c.nome}: o Braço Direito está decidindo o próximo passo (${estado.planosHoje}/${cfg.maxPlanosDia} hoje)`);
       if (estado.planosHoje === cfg.maxPlanosDia) avisar?.(`🤖 Piloto automático: limite de ${cfg.maxPlanosDia} planos por dia atingido. Volta amanhã (ou aumente o limite em 🗓 Rotinas).`);
       gravar().catch(() => {});
       return; // um projeto por vez: o próximo entra na próxima conferência

@@ -668,7 +668,7 @@ function linhasSupervisor(o, destino) {
     const quando = t.proxima ? new Date(t.proxima).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
     // só a situação; a mensagem de erro fica no registro de erros
     linha.textContent = o.desistida
-      ? `🔀 ${nomeDe(agente)} não conseguiu${o.pai ? ' · o Tech Lead passou para outro agente' : ' · confira a IA dele em ⚙ Equipe'}`
+      ? `🔀 ${nomeDe(agente)} não conseguiu${o.pai ? ' · o Braço Direito passou para outro agente' : ' · confira a IA dele em ⚙ Equipe'}`
       : `🔁 ${nomeDe(agente)}: ${t.n ? `${t.n}ª tentativa falhou` : 'falhou'}${quando ? ` · tenta de novo às ${quando}` : ''}`;
     linha.appendChild(linkErro());
     if (!o.local && !o.desistida) {
@@ -985,7 +985,7 @@ function aoOrdem(ordem, { nova }) {
     });
   });
   if (nova && vista === undefined && ordem.origem?.autopiloto && !ordem.pai && !ordem.consolidacao) {
-    ui.avisar({ icone: '🤖', titulo: 'Piloto automático', texto: `O Tech Lead está decidindo o próximo passo: ${nomeCliente(ordem.cliente)}`, cor: corDe(ordem.para), duracao: 6000 });
+    ui.avisar({ icone: '🤖', titulo: 'Piloto automático', texto: `O Braço Direito está decidindo o próximo passo: ${nomeCliente(ordem.cliente)}`, cor: corDe(ordem.para), duracao: 6000 });
   } else if (nova && vista === undefined && (ordem.origem?.rotina || ordem.origem?.telegram) && (!ordem.de || ordem.de === 'chefe')) {
     ui.avisar({ icone: ordem.origem.rotina ? '⏰' : '✈️', titulo: ordem.origem.rotina ? 'Rotina disparou' : 'Ordem pelo Telegram', texto: `${nomeDe(ordem.para)}: ${ordem.texto}`, cor: corDe(ordem.para), duracao: 6000 });
     if (!cenaPausada && sala) {

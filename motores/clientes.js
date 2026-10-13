@@ -10,11 +10,11 @@ export const CAMPOS_CLIENTE = {
   nome: { rotulo: 'Cliente', max: 80 },
   apelidos: { rotulo: 'Como o projeto aparece nos pedidos', max: 300 },
   nicho: { rotulo: 'Segmento', max: 200 },
-  produtos: { rotulo: 'Escopo e módulos', max: 2000 },
-  publico: { rotulo: 'Usuários do sistema', max: 1000 },
-  tom: { rotulo: 'Stack e padrões técnicos', max: 1000 },
-  observacoes: { rotulo: 'Integrações e infraestrutura', max: 2000 },
-  evitar: { rotulo: 'Regras de negócio e restrições', max: 1000 },
+  produtos: { rotulo: 'Escopo contratado e fee', max: 2000 },
+  publico: { rotulo: 'Squad e contatos', max: 1000 },
+  tom: { rotulo: 'Metas e KPIs', max: 1000 },
+  observacoes: { rotulo: 'Canais, ferramentas e acessos', max: 2000 },
+  evitar: { rotulo: 'Saúde da conta e riscos', max: 1000 },
   exemplos: { rotulo: 'Referências', max: 4000 },
 };
 

@@ -18,14 +18,14 @@
 import { STATUS } from './agentes.js';
 
 const TAREFAS_DEMO = {
-  orquestrador: ['Definindo a arquitetura do CRM', 'Quebrando o ERP em tarefas', 'Revisando prioridades da sprint'],
-  requisitos: ['Escrevendo histórias de usuário', 'Mapeando regras do financeiro', 'Levantando campos do cadastro'],
-  designer: ['Desenhando o dashboard', 'Criando o design system', 'Prototipando o checkout'],
-  frontend: ['Montando a landing page', 'Criando a tabela de pedidos', 'Deixando o site responsivo'],
-  backend: ['Criando a API de clientes', 'Modelando o banco de dados', 'Integrando o Pix'],
-  qa: ['Revisando o pull request', 'Escrevendo testes da API', 'Testando o login'],
-  devops: ['Subindo o Docker na VPS', 'Configurando HTTPS', 'Agendando backup do banco'],
-  documentador: ['Escrevendo o README', 'Documentando a API', 'Manual do usuário do ERP'],
+  orquestrador: ['Priorizando as demandas da semana', 'Montando a pauta da reunião de sócios', 'Consolidando o resumo executivo'],
+  performance: ['Atualizando o dashboard de KPIs', 'Analisando o CPL das contas', 'Apontando contas fora da meta'],
+  cs: ['Ligando para cliente em risco', 'Preparando o check-in mensal', 'Mapeando renovações do trimestre'],
+  squads: ['Revendo a capacidade dos squads', 'Preparando os 1:1 da semana', 'Escrevendo o PDI do gestor'],
+  financeiro: ['Calculando a margem por conta', 'Projetando o forecast de receita', 'Revisando o reajuste de fee'],
+  planejamento: ['Desenhando o funil do cliente', 'Escrevendo o briefing do squad', 'Revisando os OKRs da unidade'],
+  qa: ['Revisando o relatório mensal', 'Conferindo os números da apresentação', 'Checando o padrão da entrega'],
+  documentador: ['Escrevendo o SOP de onboarding', 'Registrando a ata da weekly', 'Atualizando o playbook de otimização'],
 };
 
 export function criarIntegracao({ ids, aoAtualizar, aoNovoAgente, aoConexao, aoOrdem, aoDecisor = () => {}, aoDocumentacao = () => {}, aoRemovido = () => {}, aoClientes = () => {}, aoAviso = () => {}, aoIas = () => {}, aoAvisoOk = () => {} }) {
