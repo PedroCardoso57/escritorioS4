@@ -1,0 +1,49 @@
+# Escritório no VPS:
+#   cp .env.exemplo .env                  (senha e chaves das IAs)
+#   cp motores.exemplo.json motores.json  (qual IA cada agente usa)
+#   docker compose up -d                              → http://IP-DO-VPS:8787
+#   docker compose --profile https up -d              → https://SEU-DOMINIO (precisa de DOMINIO no .env)
+#   Dica: COMPOSE_PROFILES=https,laya no .env liga os extras sem precisar do --profile.
+services:
+  escritorio:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MOTORES_ARQUIVO: /app/motores.json
+    ports:
+      - "${PORTA_PUBLICA:-8787}:8787"
+    volumes:
+      - dados:/app/dados
+      - ./motores.json:/app/motores.json:ro
+
+  # Laya: decide qual agente cuida das ordens "Automático". Ligue com o perfil "laya"
+  # e LAYA_URL=http://laya:8000 no .env. Precisa de ~3 GB de RAM livres.
+  laya:
+    build: ./laya
+    profiles: ["laya"]
+    restart: unless-stopped
+    environment:
+      LAYA_THREADS: ${LAYA_THREADS:-2}
+    volumes:
+      - laya-cache:/cache
+
+  # HTTPS automático (Let's Encrypt). Aponte o DNS do domínio para o VPS antes.
+  https:
+    image: caddy:2-alpine
+    profiles: ["https"]
+    restart: unless-stopped
+    depends_on: [escritorio]
+    environment:
+      DOMINIO: ${DOMINIO:-}
+    command: caddy reverse-proxy --from ${DOMINIO:-localhost} --to escritorio:8787
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy:/data
+
+volumes:
+  dados:
+  caddy:
+  laya-cache:

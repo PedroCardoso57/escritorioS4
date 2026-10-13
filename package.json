@@ -1,0 +1,17 @@
+{
+  "name": "escritorio-v4",
+  "version": "0.1.0",
+  "description": "Escritório 3D da V4 Company onde cada agente de IA trabalha na sua mesa",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node servidor.js",
+    "simular": "node exemplos/simular-motores.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0"
+  }
+}
