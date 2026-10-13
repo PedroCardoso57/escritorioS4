@@ -21,7 +21,7 @@ Tudo usa a cor da marca (`MARCA_COR`, padrão `#e30613`) e o nome (`MARCA_NOME`,
 
 ## O time
 
-Os agentes apoiam a **Head de Operações de Marketing** da unidade V4, que é sócia: ela dá as ordens (o bonequinho "Você", na mesa da frente) e o time cuida do resultado das contas, da carteira, das pessoas, da margem e dos processos.
+Os agentes apoiam a **Head de Operações de Marketing** da unidade V4, que é sócia: a **Stefani** dá as ordens (o bonequinho dela, "★ Stefani", fica na mesa da frente) e o time cuida do resultado das contas, da carteira, das pessoas, da margem e dos processos.
 
 | Agente | id | O que faz |
 |---|---|---|
@@ -187,7 +187,7 @@ As mesas são distribuídas sozinhas (8 por bloco); a sala cresce conforme a equ
 
 Com o servidor, a equipe é a do `motores.json`: para tirar alguém, use **Remover da equipe** no ⚙ Equipe (a mesa some na hora; as entregas antigas continuam no arquivo).
 
-O seu bonequinho é o `CHEFE`, no mesmo arquivo: troque `nome` (aparece como "★ Você"), cores, cabelo e pele.
+O seu bonequinho é o `CHEFE`, no mesmo arquivo: troque `nome` (aparece como "★ Stefani"), cores, cabelo e pele.
 
 ## Ligando as suas IAs (motores embutidos)
 

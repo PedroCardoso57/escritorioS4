@@ -23,8 +23,8 @@ export const AGENTES = [
   { id: 'documentador', nome: 'Processos & SOPs', funcao: 'Procedimentos, playbooks e atas',        atividade: 'digitar',  cor: '#2ec4d6', cabelo: '#a0522d', pele: '#ffdbac', estilo: 'coque', feminina: true, brinco: '#e30613' },
 ];
 
-// Você! A Head de Operações (sócia): o seu bonequinho fica na mesa da frente e leva as ordens até a equipe.
-export const CHEFE = { id: 'chefe', nome: 'Você', funcao: 'Head de Operações · Sócia', cor: '#18181b', cabelo: '#2b1d14', pele: '#f1c27d', estilo: 'longo', feminina: true, brinco: '#e30613' };
+// Stefani, a Head de Operações (sócia): o bonequinho dela fica na mesa da frente e leva as ordens até a equipe.
+export const CHEFE = { id: 'chefe', nome: 'Stefani', funcao: 'Head de Operações · Sócia', cor: '#18181b', cabelo: '#2b1d14', pele: '#f1c27d', estilo: 'longo', feminina: true, brinco: '#e30613' };
 
 // Estados aceitos e a cor de cada um.
 export const STATUS = {
