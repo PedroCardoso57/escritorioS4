@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Escritório V4 Company — 3D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="src/estilo.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.min.js",
+        "three/addons/": "./vendor/three/addons/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="cena"></div>
+
+  <header id="topo">
+    <div class="marca">
+      <span class="selo" aria-hidden="true">V4</span>
+      <h1><span class="nome-marca">V4 Company</span><small class="sub-marca">escritório de agentes · assessoria de marketing</small></h1>
+    </div>
+    <div id="hoje" aria-label="Resumo de hoje">
+      <div class="kpi" title="Entregas feitas hoje"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5"/></svg><b data-kpi="entregas">0</b><span>entregas hoje</span></div>
+      <div class="kpi" title="Agentes trabalhando agora"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><b data-kpi="trabalhando">0</b><span>trabalhando</span></div>
+      <button type="button" class="kpi" id="abrir-erros" title="Problemas de hoje · clique para abrir as notificações"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><b data-kpi="erros">0</b><span>erros</span></button>
+      <div class="kpi largo" title="Próxima rotina agendada"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><b data-kpi="rotina">—</b><span data-kpi="rotina-nome">próxima rotina</span></div>
+    </div>
+    <div id="conexao" title="Origem dos status">● demo</div>
+  </header>
+
+  <nav id="barra" aria-label="Menu">
+    <button type="button" id="visao-geral" data-rotulo="Ver o escritório todo"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></button>
+    <button type="button" id="abrir-clientes" data-rotulo="Clientes e projetos"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></button>
+    <button type="button" id="abrir-rotinas" data-rotulo="Rotinas"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v3l2 1"/></svg></button>
+    <button type="button" id="abrir-entregas" data-rotulo="Entregas"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></button>
+    <button type="button" id="abrir-documentacao" data-rotulo="Documentação"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></button>
+    <button type="button" id="abrir-relatorio" data-rotulo="Relatório"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16v-4M12 16V8M17 16v-7"/></svg></button>
+    <button type="button" id="abrir-notificacoes" data-rotulo="Notificações"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="selo-notif" hidden></span></button>
+    <button type="button" id="abrir-monitor-ias" data-rotulo="Monitor de IAs"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
+    <button type="button" id="abrir-equipe" data-rotulo="Equipe e IAs"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></button>
+    <span class="espaco"></span>
+    <button type="button" id="alternar-modo" data-rotulo="Modo lista (mais leve)"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path class="lista" d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/><path class="predio" d="M3 21h18M5 21V5l7-3 7 3v16M9 9h1M14 9h1M9 13h1M14 13h1M10 21v-4h4v4"/></svg></button>
+  </nav>
+
+  <aside id="painel">
+    <div class="abas" role="tablist">
+      <button type="button" role="tab" class="aba ativa" data-aba="ordens" aria-selected="true">Ordens <span class="contador" data-contador="ordens"></span></button>
+      <button type="button" role="tab" class="aba" data-aba="equipe" aria-selected="false">Equipe <span class="contador" data-contador="equipe"></span></button>
+      <button type="button" class="minimizar-painel" title="Minimizar o painel" aria-label="Minimizar o painel"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="m13 17 5-5-5-5M6 17l5-5-5-5"/></svg></button>
+    </div>
+    <section class="conteudo-aba" data-conteudo="ordens">
+      <ul id="lista-ordens"><li class="vazio">Nenhuma ordem ainda. Escreva na barra de baixo: o seu bonequinho leva a ordem até a mesa do agente.</li></ul>
+    </section>
+    <section class="conteudo-aba" data-conteudo="equipe" hidden>
+      <ul id="lista-agentes"></ul>
+      <p class="dica">Clique num agente (aqui ou na cena) para focar e mandar ordem para ele. Arraste para girar, role para dar zoom.</p>
+    </section>
+  </aside>
+
+  <button type="button" id="reabrir-painel" hidden title="Abrir o painel de ordens e equipe"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg><span>Ordens</span><b class="contador-reabrir"></b></button>
+
+  <div id="avisos" aria-live="polite"></div>
+
+  <form id="comando" autocomplete="off">
+    <label class="quem" title="Seu bonequinho de chefe">
+      <span class="coroa">★</span>
+      <select id="destinatario" aria-label="Para quem é a ordem"></select>
+    </label>
+    <select id="cliente-ordem" aria-label="Para qual cliente" title="A ficha do cliente vai junto com a ordem" hidden><option value="">Sem cliente</option></select>
+    <input id="texto-ordem" type="text" maxlength="2000" placeholder="Dê uma ordem… (ex.: quais contas estão fora da meta este mês?)" aria-label="Ordem" />
+    <button type="submit">Enviar</button>
+    <p id="aviso-ordem" role="status"></p>
+  </form>
+
+  <dialog id="dlg-equipe" aria-labelledby="titulo-equipe">
+    <header><h2 id="titulo-equipe">Equipe · qual IA cada agente usa</h2><button type="button" class="fechar" aria-label="Fechar">✕</button></header>
+    <div class="corpo"></div>
+  </dialog>
+
+  <dialog id="dlg-monitor-ias" aria-labelledby="titulo-monitor">
+    <header>
+      <h2 id="titulo-monitor">Monitor de IAs</h2>
+      <select name="mostrar" aria-label="Mostrar">
+        <option value="todas">Todas</option>
+        <option value="equipe">Só as da equipe</option>
+        <option value="problemas">Só com problema</option>
+      </select>
+      <button type="button" class="testar-todas">Testar todas agora</button>
+      <button type="button" class="fechar" aria-label="Fechar">✕</button>
+    </header>
+    <div class="corpo"></div>
+  </dialog>
+
+  <dialog id="dlg-erros" aria-labelledby="titulo-erros">
+    <header>
+      <h2 id="titulo-erros">Notificações</h2>
+      <select name="projeto" aria-label="Projeto" hidden></select>
+      <button type="button" class="fechar" aria-label="Fechar">✕</button>
+    </header>
+    <div class="abas-notif" role="tablist" aria-label="Filtrar notificações"></div>
+    <div class="corpo"></div>
+    <footer class="rodape-notif">
+      <label hidden>Telegram recebe
+        <select name="telegram">
+          <option value="importantes">só o importante (problemas, PR mesclado, site no ar)</option>
+          <option value="problemas">só problemas</option>
+          <option value="todas">todas as notificações</option>
+        </select>
+      </label>
+    </footer>
+  </dialog>
+
+  <dialog id="dlg-relatorio" aria-labelledby="titulo-relatorio">
+    <header>
+      <h2 id="titulo-relatorio">Relatório da equipe</h2>
+      <select name="dias" aria-label="Período">
+        <option value="1">Hoje</option>
+        <option value="7" selected>Últimos 7 dias</option>
+        <option value="30">Últimos 30 dias</option>
+      </select>
+      <button type="button" class="fechar" aria-label="Fechar">✕</button>
+    </header>
+    <div class="corpo"></div>
+  </dialog>
+
+  <dialog id="dlg-documentacao" aria-labelledby="titulo-doc">
+    <header>
+      <h2 id="titulo-doc">Documentação</h2>
+      <select name="projeto" aria-label="Projeto"><option value="geral">Geral</option></select>
+      <button type="button" class="atualizar-doc">Atualizar agora</button>
+      <button type="button" class="baixar-doc">Baixar .md</button>
+      <button type="button" class="fechar" aria-label="Fechar">✕</button>
+    </header>
+    <p class="meta-doc"></p>
+    <article class="corpo doc"></article>
+  </dialog>
+
+  <dialog id="dlg-clientes" aria-labelledby="titulo-clientes">
+    <header><h2 id="titulo-clientes">Clientes · o que a equipe precisa saber de cada projeto</h2><button type="button" class="fechar" aria-label="Fechar">✕</button></header>
+    <div class="corpo"></div>
+  </dialog>
+
+  <dialog id="dlg-rotinas" aria-labelledby="titulo-rotinas">
+    <header><h2 id="titulo-rotinas">Rotinas · ordens que saem sozinhas</h2><button type="button" class="fechar" aria-label="Fechar">✕</button></header>
+    <div class="corpo"></div>
+  </dialog>
+
+  <dialog id="dlg-entregas" aria-labelledby="titulo-entregas">
+    <header>
+      <h2 id="titulo-entregas">Entregas da equipe</h2>
+      <input name="busca" type="search" placeholder="Buscar no pedido ou na entrega…" aria-label="Buscar" />
+      <select name="agente" aria-label="Agente"><option value="">Todos os agentes</option></select>
+      <select name="cliente" aria-label="Cliente" hidden><option value="">Todos os clientes</option></select>
+      <button type="button" class="fechar" aria-label="Fechar">✕</button>
+    </header>
+    <div class="grade-entregas">
+      <div class="coluna-lista">
+        <ul class="lista-entregas"></ul>
+        <div class="rodape-entregas">
+          <span class="total"></span>
+          <button type="button" class="anterior">‹</button>
+          <button type="button" class="proxima">›</button>
+          <button type="button" class="baixar-todas" title="Baixa num único .md tudo o que está filtrado">Baixar todas</button>
+        </div>
+      </div>
+      <div class="leitura-entrega"></div>
+    </div>
+  </dialog>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

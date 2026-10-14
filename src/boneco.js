@@ -1,0 +1,564 @@
+import * as THREE from 'three';
+import { mat } from './escritorio.js';
+
+// Bonequinho feito de primitivas. Olha para +z; a mão direita fica em -x.
+// A cada quadro calculamos uma pose-alvo (ângulos das juntas) a partir do
+// estado e da atividade do agente, e as juntas seguem essa pose suavemente.
+
+const ALT_SENTADO = 0.52;
+const ALT_EM_PE = 0.92;
+const POS_QUADRO = new THREE.Vector3(0, 0, -0.98);
+
+function capsula(raio, comp, material) {
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(raio, comp, 6, 12), material);
+  m.castShadow = true;
+  return m;
+}
+
+function membro(raio, comp, material) {
+  // pivô no topo, membro pendurado para baixo (-y)
+  const pivo = new THREE.Group();
+  const m = capsula(raio, comp, material);
+  m.position.y = -comp / 2 - raio * 0.3;
+  pivo.add(m);
+  return pivo;
+}
+
+export class Boneco {
+  constructor(agente) {
+    this.agente = agente;
+    this.semente = Math.random() * 100;
+    this.emPe = 0;
+    this.tempoNoEstado = 0;
+    this.estadoAnterior = null;
+    this.rota = [];        // pontos (no espaço do pai) para andar, em ordem
+    this.rotFinal = null;  // para onde olhar ao chegar (null = padrão da mesa)
+    this.posto = null;     // onde ficar depois da rota (null = cadeira ou quadro)
+    this.velocidade = 1.4; // metros por segundo
+    this.gesto = null;     // 'apontar' | 'anunciar' (chefe) · 'beber' | 'conversar' | 'olhar' | 'folhear' | 'relaxar' (pausas)
+    this.sentarNoDestino = false; // senta ao chegar (sofá, cadeira de reunião)
+    this.comCopo = false;
+    this.atencaoAte = 0;   // até quando fica virado ouvindo o chefe
+    this.atencaoGiro = 0;
+
+    const camisa = mat(agente.cor, { roughness: 0.9 });
+    const pele = mat(agente.pele || '#f1c27d', { roughness: 0.6 });
+    const calca = mat('#2f3646');
+    const sapato = mat('#1b1d22');
+    const cabeloMat = mat(agente.cabelo || '#2b1d14', { roughness: 0.95 });
+
+    this.raiz = new THREE.Group();
+    this.quadril = new THREE.Group();
+    this.quadril.position.y = ALT_SENTADO;
+    this.raiz.add(this.quadril);
+
+    // pernas
+    this.pernas = [-1, 1].map((lado) => {
+      const coxa = membro(0.075, 0.32, calca);
+      coxa.position.x = lado * 0.1;
+      const joelho = membro(0.065, 0.32, calca);
+      joelho.position.y = -0.44;
+      const pe = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.07, 0.2), sapato);
+      pe.position.set(0, -0.44, 0.05);
+      pe.castShadow = true;
+      joelho.add(pe);
+      coxa.add(joelho);
+      this.quadril.add(coxa);
+      return { coxa, joelho };
+    });
+
+    // tronco
+    this.tronco = new THREE.Group();
+    this.quadril.add(this.tronco);
+    const corpo = capsula(0.18, 0.3, camisa);
+    corpo.position.y = 0.3;
+    corpo.scale.set(1, 1, 0.75);
+    this.tronco.add(corpo);
+    this.corpo = corpo;
+
+    // braços: ombro → cotovelo → mão
+    this.bracos = {};
+    for (const [nome, lado] of [['esq', 1], ['dir', -1]]) {
+      const ombro = membro(0.055, 0.2, camisa);
+      ombro.position.set(lado * 0.24, 0.5, 0);
+      const cotovelo = membro(0.05, 0.2, pele);
+      cotovelo.position.y = -0.3;
+      const mao = new THREE.Group();
+      mao.position.y = -0.3;
+      const punho = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 10), pele);
+      punho.castShadow = true;
+      mao.add(punho);
+      cotovelo.add(mao);
+      ombro.add(cotovelo);
+      this.tronco.add(ombro);
+      this.bracos[nome] = { ombro, cotovelo, mao, lado };
+    }
+
+    // cabeça
+    this.pescoco = new THREE.Group();
+    this.pescoco.position.y = 0.6;
+    this.tronco.add(this.pescoco);
+    const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.17, 20, 16), pele);
+    cabeca.position.y = 0.16;
+    cabeca.castShadow = true;
+    this.pescoco.add(cabeca);
+    this.criarCabelo(agente.estilo || 'curto', cabeloMat);
+    if (agente.barba) this.criarBarba(cabeloMat, agente.barba);
+    const olho = mat('#1b1d22');
+    this.olhos = [-1, 1].map((lado) => {
+      const o = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 8), olho);
+      o.position.set(lado * 0.06, 0.18, 0.155);
+      this.pescoco.add(o);
+      return o;
+    });
+    this.proximaPiscada = 1 + Math.random() * 4;
+    this.boca = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.008, 6, 12, Math.PI), mat(agente.feminina ? '#b8434f' : '#7a2f2f'));
+    this.boca.position.set(0, 0.1, 0.16);
+    this.boca.rotation.z = Math.PI;
+    this.pescoco.add(this.boca);
+
+    if (agente.feminina) {
+      // cílios, brincos e uma silhueta um pouco mais fina
+      for (const lado of [-1, 1]) {
+        const cilio = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.008, 0.01), mat('#1b1d22'));
+        cilio.position.set(lado * 0.065, 0.205, 0.158);
+        cilio.rotation.z = lado * -0.25;
+        this.pescoco.add(cilio);
+        const brinco = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8), mat(agente.brinco || '#e7c46a', { metalness: 0.8, roughness: 0.25 }));
+        brinco.position.set(lado * 0.168, 0.08, 0.01);
+        this.pescoco.add(brinco);
+      }
+      corpo.scale.set(0.9, 1, 0.72);
+    }
+
+    if (agente.chefe && agente.feminina) {
+      // colar dourado com pingente vermelho
+      const colar = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.008, 6, 24, Math.PI), mat('#d4a94a', { metalness: 0.8, roughness: 0.25 }));
+      colar.position.set(0, 0.5, 0.12);
+      colar.rotation.set(-0.35, 0, Math.PI);
+      this.tronco.add(colar);
+      const pingente = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), mat('#e30613', { roughness: 0.3 }));
+      pingente.position.set(0, 0.405, 0.15);
+      this.tronco.add(pingente);
+    } else if (agente.chefe) {
+      // gravata
+      const gravata = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.3, 4), mat('#c8102e'));
+      gravata.position.set(0, 0.36, 0.14);
+      gravata.rotation.set(-0.12, Math.PI / 4, Math.PI);
+      this.tronco.add(gravata);
+    }
+
+    this.criarAcessorios(agente.id);
+    this.criarAderecos(agente.atividade);
+
+    // copo de café/água para as pausas (na mão direita)
+    this.copo = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.09, 12), mat('#f5f5f4'));
+    this.copo.position.set(0, -0.06, 0.05);
+    this.copo.visible = false;
+    this.bracos.dir.mao.add(this.copo);
+  }
+
+  // Penteados: curto, topete, calvo, rabo (rabo de cavalo), volumoso (black power),
+  // coque, longo e bagunçado. A cabeça é uma esfera de raio 0,17 em (0, 0,16, 0).
+  criarCabelo(estilo, cabeloMat) {
+    const p = this.pescoco;
+    const add = (geo, x, y, z, escala, rot) => {
+      const m = new THREE.Mesh(geo, cabeloMat);
+      m.position.set(x, y, z);
+      if (escala) m.scale.set(...escala);
+      if (rot) m.rotation.set(...rot);
+      m.castShadow = true;
+      p.add(m);
+      return m;
+    };
+    const calota = (raio = 0.18, abertura = 0.55) => add(new THREE.SphereGeometry(raio, 20, 16, 0, Math.PI * 2, 0, Math.PI * abertura), 0, 0.18, -0.015, null, [-0.35, 0, 0]);
+    if (estilo === 'calvo') {
+      // coroa de cabelo nas laterais e atrás, topo careca
+      // o arco começa num lado, passa por trás e termina no outro (no plano horizontal)
+      const coroa = new THREE.Group();
+      coroa.position.set(0, 0.15, -0.01);
+      coroa.rotation.x = Math.PI / 2;
+      const anel = new THREE.Mesh(new THREE.TorusGeometry(0.162, 0.045, 10, 28, Math.PI * 1.2), cabeloMat);
+      anel.rotation.z = Math.PI * 0.9;
+      anel.scale.set(1, 1, 1.5);
+      coroa.add(anel);
+      p.add(coroa);
+      return;
+    }
+    if (estilo === 'volumoso') {
+      // black power: volume em volta da cabeça, deixando o rosto livre
+      add(new THREE.SphereGeometry(0.235, 22, 18), 0, 0.23, -0.085, [1, 0.95, 0.92]);
+      return;
+    }
+    calota();
+    if (estilo === 'topete') {
+      // topete: uma onda de cabelo levantada na frente
+      add(new THREE.SphereGeometry(0.1, 16, 12), 0.015, 0.3, 0.1, [1.35, 0.55, 0.9], [0.5, 0, 0.08]);
+    } else if (estilo === 'rabo') {
+      add(new THREE.SphereGeometry(0.05, 10, 8), 0, 0.24, -0.17); // prendedor
+      add(new THREE.CapsuleGeometry(0.055, 0.2, 6, 10), 0, 0.08, -0.22, null, [0.35, 0, 0]);
+    } else if (estilo === 'coque') {
+      add(new THREE.SphereGeometry(0.085, 14, 12), 0, 0.33, -0.1);
+      add(new THREE.TorusGeometry(0.06, 0.012, 6, 16), 0, 0.29, -0.08, null, [Math.PI / 2 - 0.5, 0, 0]);
+    } else if (estilo === 'longo') {
+      // cabelo até os ombros: painel atrás e mechas dos lados
+      add(new THREE.CapsuleGeometry(0.16, 0.16, 6, 14), 0, 0.06, -0.07, [1.12, 1, 0.62]);
+      for (const lado of [-1, 1]) add(new THREE.CapsuleGeometry(0.045, 0.2, 6, 10), lado * 0.15, 0.06, 0.04);
+    } else if (estilo === 'baguncado') {
+      for (let i = 0; i < 5; i++) add(new THREE.ConeGeometry(0.05, 0.12, 6), (i - 2) * 0.06, 0.3 - Math.abs(i - 2) * 0.02, -0.04 - Math.abs(i - 2) * 0.02, null, [-0.5, 0, (i - 2) * 0.35]);
+    }
+  }
+
+  // barba: 'curta' (rente ao queixo) ou 'cheia'
+  criarBarba(cabeloMat, tipo) {
+    const cheia = tipo === 'cheia';
+    // queixo e mandíbula, logo abaixo da boca (que continua à mostra)
+    const barba = new THREE.Mesh(new THREE.SphereGeometry(0.174, 22, 12, 0, Math.PI * 2, Math.PI * (cheia ? 0.635 : 0.66), Math.PI * 0.3), cabeloMat);
+    barba.position.set(0, 0.158, 0.006);
+    barba.scale.set(1.03, cheia ? 1.08 : 1.02, 1.1);
+    this.pescoco.add(barba);
+    if (cheia) {
+      // costeletas finas ligando a barba ao cabelo
+      for (const lado of [-1, 1]) {
+        const costeleta = new THREE.Mesh(new THREE.CapsuleGeometry(0.014, 0.07, 4, 8), cabeloMat);
+        costeleta.position.set(lado * 0.166, 0.14, 0.035);
+        costeleta.rotation.z = lado * 0.12;
+        this.pescoco.add(costeleta);
+      }
+    }
+    const bigode = new THREE.Mesh(new THREE.CapsuleGeometry(0.013, 0.07, 4, 8), cabeloMat);
+    bigode.rotation.z = Math.PI / 2;
+    bigode.position.set(0, 0.128, 0.163);
+    this.pescoco.add(bigode);
+  }
+
+  // Acessórios por função: headset no Customer Success, óculos na Qualidade, no Financeiro
+  // e no Planejamento, gorro no Performance, boné nas Pessoas & Squads, crachá no Braço
+  // Direito, lápis na orelha de Processos (os ids dos times antigos continuam valendo).
+  criarAcessorios(id) {
+    const preto = mat('#18181b', { roughness: 0.4 });
+    if (['cs', 'designer'].includes(id)) {
+      const arco = new THREE.Mesh(new THREE.TorusGeometry(0.185, 0.018, 8, 24, Math.PI), preto);
+      arco.position.set(0, 0.17, 0);
+      this.pescoco.add(arco);
+      for (const lado of [-1, 1]) {
+        const concha = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.05, 16), mat('#e11d2a', { roughness: 0.4 }));
+        concha.rotation.z = Math.PI / 2;
+        concha.position.set(lado * 0.18, 0.15, 0);
+        this.pescoco.add(concha);
+      }
+    }
+    if (['qa', 'revisor', 'financeiro', 'planejamento', 'requisitos', 'pesquisador'].includes(id)) {
+      const armacao = ['qa', 'revisor', 'financeiro'].includes(id) ? preto : mat('#c9a14a', { metalness: 0.7, roughness: 0.3 });
+      for (const lado of [-1, 1]) {
+        const lente = new THREE.Mesh(new THREE.TorusGeometry(0.038, 0.007, 6, 16), armacao);
+        lente.position.set(lado * 0.06, 0.18, 0.165);
+        this.pescoco.add(lente);
+      }
+      const ponte = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.008, 0.008), armacao);
+      ponte.position.set(0, 0.185, 0.168);
+      this.pescoco.add(ponte);
+    }
+    if (['performance', 'backend', 'programador'].includes(id)) {
+      const gorro = new THREE.Mesh(new THREE.SphereGeometry(0.185, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), mat('#27272a', { roughness: 1 }));
+      gorro.position.set(0, 0.2, -0.01);
+      gorro.rotation.x = -0.25;
+      this.pescoco.add(gorro);
+      const barra = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.025, 8, 24), mat('#e11d2a', { roughness: 1 }));
+      barra.rotation.x = Math.PI / 2 - 0.25;
+      barra.position.set(0, 0.215, 0.005);
+      this.pescoco.add(barra);
+    }
+    if (id === 'orquestrador') {
+      const cracha = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.01), mat('#f4f4f5'));
+      cracha.position.set(0.07, 0.38, 0.145);
+      this.tronco.add(cracha);
+      const faixa = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.025, 0.012), mat('#e11d2a'));
+      faixa.position.set(0.07, 0.42, 0.147);
+      this.tronco.add(faixa);
+    }
+    if (['squads', 'frontend'].includes(id)) {
+      // boné virado para trás
+      const bone = new THREE.Mesh(new THREE.SphereGeometry(0.182, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.42), mat('#0f172a', { roughness: 0.9 }));
+      bone.position.set(0, 0.2, 0);
+      this.pescoco.add(bone);
+      const aba = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.015, 0.12), mat(id === 'squads' ? '#e30613' : '#2ec4d6', { roughness: 0.9 }));
+      aba.position.set(0, 0.25, -0.2);
+      aba.rotation.x = -0.25;
+      this.pescoco.add(aba);
+    }
+    if (id === 'devops') {
+      // capacete de obra: quem cuida da infraestrutura
+      const capacete = new THREE.Mesh(new THREE.SphereGeometry(0.19, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), mat('#fbbf24', { roughness: 0.5 }));
+      capacete.position.set(0, 0.19, 0);
+      this.pescoco.add(capacete);
+      const aba = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.012, 24), mat('#fbbf24', { roughness: 0.5 }));
+      aba.position.set(0, 0.2, 0.02);
+      this.pescoco.add(aba);
+    }
+    if (['documentador', 'redator'].includes(id)) {
+      const lapis = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.16, 6), mat('#fbbf24'));
+      lapis.rotation.z = Math.PI / 2 - 0.3;
+      lapis.position.set(-0.17, 0.2, 0.02);
+      this.pescoco.add(lapis);
+    }
+  }
+
+  criarAderecos(atividade) {
+    const mao = this.bracos.dir.mao;
+    this.aderecos = {};
+    if (atividade === 'telefone') {
+      const fone = new THREE.Group();
+      fone.add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.22, 0.05), mat('#2a2d35')));
+      fone.position.set(0.02, -0.04, 0.02);
+      mao.add(fone);
+      this.aderecos.telefone = fone;
+    }
+    if (atividade === 'ler') {
+      const papel = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.005, 0.22), mat('#f4f1ea'));
+      papel.position.set(0.2, -0.05, 0.04);
+      mao.add(papel);
+      this.aderecos.papel = papel;
+    }
+    if (atividade === 'desenhar' || atividade === 'quadro') {
+      const caneta = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.008, 0.16, 8), mat(atividade === 'quadro' ? '#e5484d' : '#ffffff'));
+      caneta.position.set(0, -0.06, 0.03);
+      caneta.rotation.x = 0.6;
+      mao.add(caneta);
+      this.aderecos.caneta = caneta;
+    }
+  }
+
+  // Pose-alvo a partir de estado/atividade. Ângulos em radianos.
+  // ombroX negativo = levanta o braço para frente; abertura positiva = afasta do corpo.
+  pose(estado, t) {
+    const atv = this.agente.atividade;
+    const p = {
+      troncoX: 0.05, troncoY: 0, cabecaX: 0, cabecaY: 0,
+      esq: { x: -0.5, abre: 0.05, cot: -0.7 },
+      dir: { x: -0.5, abre: 0.05, cot: -0.7 },
+      emPe: 0, local: 'mesa', boca: 0,
+    };
+    const ts = this.tempoNoEstado;
+
+    if (estado === 'trabalhando') {
+      if (atv === 'digitar') {
+        p.troncoX = 0.14; p.cabecaX = 0.12;
+        p.esq = { x: -0.62 + Math.sin(t * 17) * 0.05, abre: -0.12, cot: -1.0 };
+        p.dir = { x: -0.62 + Math.sin(t * 17 + 2) * 0.05, abre: -0.12, cot: -1.0 };
+        p.cabecaY = Math.sin(t * 0.7) * 0.08;
+      } else if (atv === 'analisar') {
+        p.troncoX = 0.1;
+        p.dir = { x: -0.62 + Math.sin(t * 2.3) * 0.04, abre: 0.25 + Math.sin(t * 3.1) * 0.05, cot: -1.0 };
+        // de tempos em tempos coça o queixo pensando
+        const pensando = Math.sin(t * 0.4 + this.semente) > 0.6;
+        p.esq = pensando ? { x: -1.0, abre: -0.35, cot: -2.2 } : { x: -0.55, abre: -0.1, cot: -1.0 };
+        p.cabecaX = pensando ? 0.05 : 0.0;
+        p.cabecaY = Math.sin(t * 0.9) * 0.15;
+      } else if (atv === 'ler') {
+        p.troncoX = 0.08; p.cabecaX = 0.4;
+        p.dir = { x: -0.95, abre: -0.3, cot: -0.9 };
+        const virando = (t + this.semente) % 5 < 0.6;
+        p.esq = virando ? { x: -1.1, abre: -0.6, cot: -1.0 } : { x: -0.95, abre: -0.3, cot: -0.9 };
+        p.cabecaY = Math.sin(t * 1.2) * 0.12;
+      } else if (atv === 'telefone') {
+        p.troncoY = Math.sin(t * 0.6) * 0.25;
+        p.dir = { x: -1.4, abre: 0.15, cot: -2.4 };
+        p.esq = { x: -0.7 + Math.sin(t * 2.5) * 0.25, abre: 0.15, cot: -0.9 + Math.sin(t * 3) * 0.3 };
+        p.cabecaX = Math.sin(t * 3) * 0.06; p.cabecaY = -0.25;
+        p.boca = Math.abs(Math.sin(t * 9));
+      } else if (atv === 'desenhar') {
+        p.troncoX = 0.16; p.cabecaX = 0.3;
+        p.dir = { x: -0.62 + Math.sin(t * 3) * 0.07, abre: 0.0 + Math.cos(t * 3) * 0.07, cot: -1.0 };
+        p.esq = { x: -0.5, abre: -0.15, cot: -1.0 };
+      } else if (atv === 'quadro') {
+        p.emPe = 1; p.local = 'quadro';
+        p.troncoX = 0; p.cabecaX = -0.05;
+        p.dir = { x: -2.0 + Math.sin(t * 4) * 0.12, abre: 0.25 + Math.cos(t * 2.3) * 0.15, cot: -0.5 };
+        p.esq = { x: 0.05, abre: 0.08, cot: -0.2 };
+        p.cabecaY = Math.sin(t * 2.3) * 0.15;
+      }
+    } else if (estado === 'aguardando') {
+      // mão no queixo, batucando a mesa com a outra
+      p.troncoX = 0.12; p.cabecaX = -0.05;
+      p.dir = { x: -1.0, abre: -0.4, cot: -2.15 };
+      p.esq = { x: -0.62 + Math.max(0, Math.sin(t * 8)) * 0.08, abre: -0.1, cot: -1.0 };
+      p.cabecaY = Math.sin(t * 0.5) * 0.3;
+    } else if (estado === 'erro') {
+      // mãos no rosto, balançando a cabeça
+      p.troncoX = 0.1;
+      p.esq = { x: -1.4, abre: -0.25, cot: -2.0 };
+      p.dir = { x: -1.4, abre: -0.25, cot: -2.0 };
+      p.cabecaY = Math.sin(t * 6) * 0.3;
+      p.boca = 1;
+    } else if (estado === 'concluido') {
+      if (ts < 3) {
+        // comemora com os braços para cima
+        const pulo = Math.abs(Math.sin(t * 8));
+        p.troncoX = -0.1 * pulo;
+        p.esq = { x: -2.9, abre: 0.35 + pulo * 0.2, cot: -0.2 };
+        p.dir = { x: -2.9, abre: 0.35 + pulo * 0.2, cot: -0.2 };
+      } else {
+        // relaxa com as mãos atrás da cabeça
+        p.troncoX = -0.18; p.cabecaX = -0.15;
+        p.esq = { x: -2.6, abre: 0.9, cot: -2.3 };
+        p.dir = { x: -2.6, abre: 0.9, cot: -2.3 };
+      }
+    } else {
+      // ocioso: encosta, olha em volta e de vez em quando se espreguiça
+      p.troncoX = -0.12;
+      p.cabecaY = Math.sin(t * 0.3 + this.semente) * 0.6;
+      p.esq = { x: -0.45, abre: -0.05, cot: -0.6 };
+      p.dir = { x: -0.45, abre: -0.05, cot: -0.6 };
+      if ((t + this.semente * 3) % 14 < 2) {
+        p.esq = { x: -3.0, abre: 0.2, cot: 0 };
+        p.dir = { x: -3.0, abre: 0.2, cot: 0 };
+        p.cabecaX = -0.25;
+      }
+    }
+    // pausas: o que o agente faz longe da mesa quando não há trabalho
+    const fala = Math.sin(t * 0.8 + this.semente * 7) > 0; // em conversa, um fala e o outro escuta
+    if (this.gesto === 'beber') {
+      p.emPe = 1; p.troncoX = 0; p.cabecaY = Math.sin(t * 0.4 + this.semente) * 0.3;
+      const gole = (t + this.semente * 5) % 6 < 1.2;
+      p.dir = gole ? { x: -2.2, abre: -0.3, cot: -2.2 } : { x: -0.85, abre: -0.1, cot: -1.5 };
+      p.esq = { x: 0.05, abre: 0.08, cot: -0.2 };
+      p.cabecaX = gole ? -0.25 : 0;
+    } else if (this.gesto === 'conversar') {
+      p.emPe = this.sentarNoDestino ? 0 : 1; p.troncoX = this.sentarNoDestino ? 0.05 : 0;
+      p.cabecaX = -0.05; p.cabecaY = Math.sin(t * 0.7 + this.semente) * 0.12;
+      p.dir = this.comCopo ? { x: -0.85, abre: -0.1, cot: -1.5 } : { x: -0.6 + (fala ? Math.sin(t * 5) * 0.25 : 0), abre: 0.2, cot: -1.2 };
+      p.esq = fala ? { x: -0.9 + Math.sin(t * 4 + 1) * 0.3, abre: 0.35, cot: -1.0 } : { x: -0.2, abre: 0.05, cot: -0.4 };
+      p.boca = fala ? Math.abs(Math.sin(t * 9)) : 0;
+      if (!fala && (t + this.semente) % 7 < 0.8) p.cabecaX = 0.15; // concorda com a cabeça
+    } else if (this.gesto === 'olhar') {
+      // mãos para trás, olhando a vista
+      p.emPe = 1; p.troncoX = -0.02;
+      p.esq = { x: 0.45, abre: -0.25, cot: -1.3 };
+      p.dir = { x: 0.45, abre: -0.25, cot: -1.3 };
+      p.cabecaY = Math.sin(t * 0.25 + this.semente) * 0.5; p.cabecaX = -0.1;
+    } else if (this.gesto === 'folhear') {
+      p.emPe = 1; p.troncoX = 0.05; p.cabecaX = 0.35;
+      p.dir = { x: -0.95, abre: -0.3, cot: -0.9 };
+      p.esq = (t + this.semente) % 5 < 0.6 ? { x: -1.1, abre: -0.6, cot: -1.0 } : { x: -0.95, abre: -0.3, cot: -0.9 };
+    } else if (this.gesto === 'relaxar') {
+      // jogado no sofá
+      p.emPe = 0; p.troncoX = -0.32; p.cabecaX = -0.2; p.cabecaY = Math.sin(t * 0.3 + this.semente) * 0.4;
+      p.esq = { x: -0.2, abre: 0.7, cot: -0.5 };
+      p.dir = this.comCopo ? { x: -0.85, abre: -0.1, cot: -1.5 } : { x: -0.2, abre: 0.7, cot: -0.5 };
+    }
+    // gestos e atenção têm prioridade sobre a pose do estado
+    if (this.gesto === 'apontar') {
+      p.emPe = 1;
+      p.dir = { x: -1.45 + Math.sin(t * 5) * 0.12, abre: 0.15, cot: -0.15 };
+      p.esq = { x: -0.5 + Math.sin(t * 3) * 0.2, abre: 0.2, cot: -1.2 };
+      p.troncoX = 0.02; p.cabecaX = 0.1; p.cabecaY = 0;
+      p.boca = Math.abs(Math.sin(t * 9));
+    } else if (this.gesto === 'consultar') {
+      // mãos sobre a bola de cristal
+      p.emPe = 1;
+      const v = Math.sin(t * 3) * 0.08;
+      p.esq = { x: -1.05 + v, abre: -0.25, cot: -0.7 };
+      p.dir = { x: -1.05 - v, abre: -0.25, cot: -0.7 };
+      p.troncoX = 0.25; p.cabecaX = 0.35; p.cabecaY = 0;
+    } else if (this.gesto === 'anunciar') {
+      p.emPe = 1;
+      const g = Math.sin(t * 4);
+      p.esq = { x: -2.2 + g * 0.3, abre: 0.6, cot: -0.4 };
+      p.dir = { x: -2.2 - g * 0.3, abre: 0.6, cot: -0.4 };
+      p.troncoX = -0.05; p.cabecaX = -0.1; p.cabecaY = Math.sin(t * 1.5) * 0.4;
+      p.boca = Math.abs(Math.sin(t * 9));
+    } else if (t < this.atencaoAte && !p.emPe) {
+      // vira na cadeira para ouvir o chefe
+      p.troncoY = this.atencaoGiro; p.cabecaY = this.atencaoGiro * 0.4; p.cabecaX = -0.2;
+      p.esq = { x: -0.45, abre: -0.05, cot: -0.6 };
+      p.dir = { x: -0.45, abre: -0.05, cot: -0.6 };
+      if (t > this.atencaoAte - 1) { p.dir = { x: -1.6, abre: 0.3, cot: -1.6 }; } // "positivo!"
+    }
+    return p;
+  }
+
+  // Anda pelos pontos dados e, ao chegar, olha para `rotFinal`.
+  irPor(pontos, rotFinal = null) {
+    this.rota = pontos.map((v) => v.clone());
+    this.posto = this.rota.length ? this.rota[this.rota.length - 1].clone() : null; // onde fica ao terminar
+    this.rotFinal = rotFinal;
+  }
+
+  chegou() { return this.rota.length === 0 && this.parado; }
+
+  atualizar(dt, t, estado) {
+    if (estado !== this.estadoAnterior) { this.estadoAnterior = estado; this.tempoNoEstado = 0; }
+    this.tempoNoEstado += dt;
+
+    const p = this.pose(estado, t);
+    const k = 1 - Math.exp(-dt * 9);
+    const L = (a, b) => a + (b - a) * k;
+
+    // deslocamento: levanta, anda pela rota (ou até o quadro), gira e senta ao voltar
+    const naRota = this.rota.length > 0;
+    const destino = naRota ? this.rota[0] : this.posto ?? (p.local === 'quadro' ? POS_QUADRO : new THREE.Vector3());
+    const dist = this.raiz.position.distanceTo(destino);
+    if (naRota && dist < 0.05) this.rota.shift();
+    const andando = dist > 0.03;
+    this.parado = !andando;
+    // ao chegar num lugar para sentar (sofá, reunião), não fica de pé por causa da direção final
+    const querEmPe = p.emPe || andando || this.rota.length || (this.rotFinal !== null && !this.sentarNoDestino) ? 1 : 0;
+    this.emPe = L(this.emPe, querEmPe);
+    let rotAlvo = this.rotFinal ?? (p.local === 'quadro' ? Math.PI : 0);
+    if (this.emPe > 0.85 && andando) {
+      const dir = destino.clone().sub(this.raiz.position).normalize();
+      this.raiz.position.add(dir.multiplyScalar(Math.min(dist, dt * this.velocidade)));
+      if (dist > 0.25) rotAlvo = Math.atan2(dir.x, dir.z); // olha para onde anda
+    }
+    if (this.emPe > 0.5) {
+      // gira pelo caminho mais curto
+      let d = rotAlvo - this.raiz.rotation.y;
+      d = Math.atan2(Math.sin(d), Math.cos(d));
+      this.raiz.rotation.y += d * k;
+    }
+
+    this.quadril.position.y = ALT_SENTADO + (ALT_EM_PE - ALT_SENTADO) * this.emPe;
+    const balanco = andando && this.emPe > 0.85 ? Math.sin(t * 9) : 0;
+    this.pernas.forEach(({ coxa, joelho }, i) => {
+      const lado = i ? 1 : -1;
+      const coxaAlvo = -Math.PI / 2 * (1 - this.emPe) + balanco * 0.45 * lado;
+      const joelhoAlvo = Math.PI / 2 * (1 - this.emPe) + Math.max(0, -balanco * lado) * 0.6;
+      coxa.rotation.x = L(coxa.rotation.x, coxaAlvo);
+      joelho.rotation.x = L(joelho.rotation.x, joelhoAlvo);
+    });
+
+    if (balanco) {
+      p.esq = { x: balanco * 0.4, abre: 0.08, cot: -0.2 };
+      p.dir = { x: -balanco * 0.4, abre: 0.08, cot: -0.2 };
+      p.troncoX = 0.03;
+    }
+
+    this.tronco.rotation.x = L(this.tronco.rotation.x, p.troncoX);
+    this.tronco.rotation.y = L(this.tronco.rotation.y, p.troncoY);
+    this.pescoco.rotation.x = L(this.pescoco.rotation.x, p.cabecaX);
+    this.pescoco.rotation.y = L(this.pescoco.rotation.y, p.cabecaY);
+    for (const nome of ['esq', 'dir']) {
+      const b = this.bracos[nome];
+      const alvo = p[nome];
+      b.ombro.rotation.x = L(b.ombro.rotation.x, alvo.x);
+      b.ombro.rotation.z = L(b.ombro.rotation.z, alvo.abre * b.lado);
+      b.cotovelo.rotation.x = L(b.cotovelo.rotation.x, alvo.cot);
+    }
+    this.boca.scale.y = L(this.boca.scale.y, 1 + p.boca * 0.6);
+    // pisca de vez em quando e respira devagar
+    this.proximaPiscada -= dt;
+    const piscando = this.proximaPiscada < 0.12;
+    if (this.proximaPiscada < 0) this.proximaPiscada = 2 + Math.random() * 4;
+    for (const o of this.olhos) o.scale.y = piscando ? 0.15 : 1;
+    this.corpo.scale.y = 1 + Math.sin(t * 1.7 + this.semente) * 0.015;
+    this.copo.visible = this.comCopo;
+    this.boca.rotation.z = estado === 'erro' ? 0 : Math.PI; // sorriso ↔ boca triste
+
+    const trabalhando = estado === 'trabalhando';
+    for (const [nome, obj] of Object.entries(this.aderecos)) {
+      obj.visible = trabalhando || (nome === 'caneta' && this.agente.atividade === 'desenhar');
+    }
+    return { escrevendoNoQuadro: trabalhando && p.local === 'quadro' && !andando };
+  }
+}
